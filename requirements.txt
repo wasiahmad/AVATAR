@@ -1,0 +1,8 @@
+numpy
+six
+submitit
+torch==1.5.1
+transformers==3.0.2
+sacrebleu==1.2.11
+tree_sitter==0.2.1
+-e git://github.com/pytorch/fairseq.git@698e3b91ffa832c286c48035bdff78238b0de8ae
