@@ -47,6 +47,8 @@ bash run.sh python java plbart-multilingual;
 }
 
 # bash run.sh python java codebert
+08/28/2021 14:40:31 - INFO - __main__ -   Computation res test_python-java : {"error": 390, "failure": 54, "identical_gold": 10, "script_not_found": 466, "success": 36, "timeout": 2, "total": 948, "total_evaluated": 482}
+08/28/2021 14:40:31 - INFO - __main__ -   test_python-java_mt_comp_acc = 0.074689
 {
     "ArrayIndexOutOfBoundsException": 3,
     "BadOperand": 4,
@@ -175,6 +177,63 @@ bash run.sh python java plbart-multilingual;
     </tbody>
 </table>  
 
+- We categorize the errors into Compilation and Runtime errors. Check details 
+[here](https://github.com/wasiahmad/AVATAR/blob/main/evaluation/TransCoder/classify_errors.py).
+- Compilation and Runtime errors (in %) made by the models are reported below.
+
+<table>
+    <thead>
+        <tr>
+            <th rowspan=2 align ="left">Model</th>
+            <th colspan=2 align ="center">Java to Python</th>
+            <th colspan=2 align ="center">Python to Java</th>
+        </tr>
+        <tr>
+            <th align ="center">Compilation</th>
+            <th align ="center">Runtime</th>
+            <th align ="center">Compilation</th>
+            <th align ="center">Runtime</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
+            <td align ="center">0.0%</td>
+            <td align ="center">30.6%</td>
+            <td align ="center">31.5%</td>
+            <td align ="center">9.5%</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
+            <td align ="center">0.0%</td>
+            <td align ="center">61.2%</td>
+            <td align ="center">80.1%</td>
+            <td align ="center">0.8%</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2009.08366.pdf" target="_blank">GraphCodeBERT</a></td>
+            <td align ="center">0.0%</td>
+            <td align ="center">59.5%</td>
+            <td align ="center">78.6%</td>
+            <td align ="center">0.6%</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>mono</sub></a></td>
+            <td align ="center">0.0%</td>
+            <td align ="center">10.1%</td>
+            <td align ="center">18.3%</td>
+            <td align ="center">2.9%</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a></td>
+            <td align ="center">0.0%</td>
+            <td align ="center">49.4%</td>
+            <td align ="center">63.7%</td>
+            <td align ="center">2.9%</td>
+        </tr>
+    </tbody>
+</table> 
+
 - Computational Accuracy (CA) is defined as `Success / #tests`.
 - PLBART<sub>mono</sub> outperforms all the baselines in terms of all the evaluation metrics.
 
@@ -275,63 +334,6 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">63.1</td>
             <td align ="center">41.3</td>
             <td align ="center">55.9</td>
-        </tr>
-    </tbody>
-</table> 
-
-- We categorize the errors into Compilation and Runtime errors. Check details 
-[here](https://github.com/wasiahmad/AVATAR/blob/main/evaluation/TransCoder/classify_errors.py).
-- Compilation and Runtime errors (in %) made by the models are reported below.
-
-<table>
-    <thead>
-        <tr>
-            <th rowspan=2 align ="left">Model</th>
-            <th colspan=2 align ="center">Java to Python</th>
-            <th colspan=2 align ="center">Python to Java</th>
-        </tr>
-        <tr>
-            <th align ="center">Compilation</th>
-            <th align ="center">Runtime</th>
-            <th align ="center">Compilation</th>
-            <th align ="center">Runtime</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
-            <td align ="center">0.0%</td>
-            <td align ="center">30.6%</td>
-            <td align ="center">31.5%</td>
-            <td align ="center">9.5%</td>
-        </tr>
-        <tr>
-            <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
-            <td align ="center">0.0%</td>
-            <td align ="center">61.2%</td>
-            <td align ="center">80.1%</td>
-            <td align ="center">0.8%</td>
-        </tr>
-        <tr>
-            <td><a href="https://arxiv.org/pdf/2009.08366.pdf" target="_blank">GraphCodeBERT</a></td>
-            <td align ="center">0.0%</td>
-            <td align ="center">59.5%</td>
-            <td align ="center">78.6%</td>
-            <td align ="center">0.6%</td>
-        </tr>
-        <tr>
-            <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>mono</sub></a></td>
-            <td align ="center">0.0%</td>
-            <td align ="center">10.1%</td>
-            <td align ="center">18.3%</td>
-            <td align ="center">2.9%</td>
-        </tr>
-        <tr>
-            <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a></td>
-            <td align ="center">0.0%</td>
-            <td align ="center">49.4%</td>
-            <td align ="center">63.7%</td>
-            <td align ="center">2.9%</td>
         </tr>
     </tbody>
 </table> 
