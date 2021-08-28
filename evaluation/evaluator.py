@@ -6,6 +6,7 @@ import sys
 sys.path.append("..")
 
 import json
+import argparse
 from evaluation.bleu import compute_bleu
 from lang_processors.java_processor import JavaProcessor
 from lang_processors.python_processor import PythonProcessor
@@ -16,7 +17,6 @@ pyprocessor = PythonProcessor(root_folder=root_folder)
 
 
 def main():
-    import argparse
     parser = argparse.ArgumentParser(description='Evaluate leaderboard predictions for BigCloneBench dataset.')
     parser.add_argument('--references', help="filename of the labels, in jsonl format.")
     parser.add_argument('--txt_ref', action='store_true', help='reference file is a txt file')

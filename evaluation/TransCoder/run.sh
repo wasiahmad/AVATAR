@@ -30,3 +30,7 @@ python evaluate.py \
     --source_lang $SOURCE \
     --target_lang $TARGET \
     --retry_mismatching_types True;
+
+python classify_errors.py \
+    --logfile ${OUTDIR}/${SPLIT}_${SOURCE}-${TARGET}.log \
+    --lang $TARGET;
