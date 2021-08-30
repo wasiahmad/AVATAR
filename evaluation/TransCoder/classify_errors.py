@@ -47,6 +47,7 @@ JAVA_ERROR_CLASSES = {
     'IndexOutOfBoundsException': ('string', 'java.lang.IndexOutOfBoundsException'),
     'ArithmeticException': ('string', 'java.lang.ArithmeticException'),
     'VariableNotInitialized': ('regexp', 'error: variable .* might not have been initialized'),
+    'BreakOutsideSwitchOrLoop': ('string', 'error: break outside switch or loop')
 }
 
 JAVA_ERROR_TYPES = {
@@ -66,6 +67,7 @@ JAVA_ERROR_TYPES = {
         'UnreachableStatement',
         'IntNumberTooLong',
         'VariableNotInitialized',
+        'BreakOutsideSwitchOrLoop',
     ],
     'Runtime Errors': [
         'ArrayIndexOutOfBoundsException',

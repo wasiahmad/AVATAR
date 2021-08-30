@@ -22,6 +22,7 @@ EVAL_SCRIPT_FOLDER = {
 # https://github.com/facebookresearch/TransCoder/issues/10#issuecomment-677515085
 def main(params):
     # Lets say we want to evaluate computation accuracy for Python -> Cpp.
+    # 
     # ref_path is the absolute path to the tokenized cpp references i.e ground truths (also called gold functions),
     # one function per line. We give the references in order to compute the "identical to gold" score.
     # These tokenized references are given in the raw data we provide here. In the raw data your have

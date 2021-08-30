@@ -20,6 +20,7 @@ from concurrent.futures import ProcessPoolExecutor
 from lang_processors.java_processor import JavaProcessor
 from lang_processors.python_processor import PythonProcessor
 from lang_processors.lang_processor import LangProcessor
+from transformers.tokenization_gpt2 import bytes_to_unicode
 
 TREE_SITTER_ROOT = Path(__file__).parents[2].joinpath("third_party")
 
@@ -398,13 +399,46 @@ def to_cuda(*args):
     return [None if x is None else x.cuda() for x in args]
 
 
-def restore_segmentation(path):
+def restore_fastBPE_segmentation(path):
+    restore_cmd = "sed -i -r 's/(@@ )|(@@ ?$)//g' %s"
+    subprocess.Popen(restore_cmd % path, shell=True).wait()
+
+
+def restore_segmentation(path, roberta_mode=False, single_line=False):
     """
     Take a file segmented with BPE and restore it to its original segmentation.
     """
     assert os.path.isfile(path)
-    restore_cmd = "sed -i -r 's/(@@ )|(@@ ?$)//g' %s"
-    subprocess.Popen(restore_cmd % path, shell=True).wait()
+    if not roberta_mode:
+        restore_fastBPE_segmentation(path)
+    else:
+        return restore_roberta_segmentation(path, single_line=single_line)
+
+
+def restore_roberta_segmentation(path, single_line=False):
+    with open(path, "r", encoding="utf-8", errors="replace") as input_file:
+        text_inputs = input_file.read().split("\n")
+    output = restore_roberta_segmentation_string(text_inputs, single_line)
+    with open(path, "w") as output_path:
+        output_path.write(output)
+
+
+def restore_roberta_segmentation_string(text_inputs, single_line=False):
+    if isinstance(text_inputs, str):
+        text_inputs = text_inputs.splitlines()
+    output_lines = [
+        restore_roberta_segmentation_sentence(line, single_line=single_line)
+        for line in text_inputs
+    ]
+    return "\n".join(output_lines)
+
+
+def restore_roberta_segmentation_sentence(line, single_line=False):
+    byte_encoder = bytes_to_unicode()
+    byte_decoder = {v: k for k, v in byte_encoder.items()}
+    text = "".join(line.replace(" ", ""))
+    res = bytearray([byte_decoder[c] for c in text]).decode("utf-8", errors="replace")
+    return res.replace("\n", "#NEWLINE") if single_line else res
 
 
 def parse_lambda_config(params):

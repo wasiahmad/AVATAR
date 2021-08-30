@@ -2,7 +2,9 @@
 
 - Official code of our work, [AVATAR: A Parallel Corpus for Java-Python Program Translation](https://arxiv.org/abs/2108.11590). 
 - AVATAR stands for *j**AVA**-py**T**hon progr**A**m t**R**anslation*. 
-- AVATAR is a corpus of **8,475** programming problems and their solutions written in Java and Python. 
+- AVATAR is a corpus of **8,475** programming problems and their solutions written in Java and Python.
+- Supervised fine-tuning and evaluation in terms of **Computational Accuracy**, see details 
+[here](https://github.com/wasiahmad/AVATAR/tree/main/evaluation).
 
 <!--
 <p align='justify'>
@@ -151,156 +153,156 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
     <tbody>
         <tr>
           <td rowspan=2>None</td>
-          <td>Naive Copy</td>
-          <td>-</td>
-          <td>23.4</td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>0.0</td>
-          <td>-</td>
-          <td>26.9</td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>0.0</td>
+          <td align ="center">Naive Copy</td>
+          <td align ="center">-</td>
+          <td align ="center">23.4</td>
+          <td align ="center">-</td>
+          <td align ="center">-</td>
+          <td align ="center">-</td>
+          <td align ="center">0.0</td>
+          <td align ="center">-</td>
+          <td align ="center">26.9</td>
+          <td align ="center">-</td>
+          <td align ="center">-</td>
+          <td align ="center">-</td>
+          <td align ="center">0.0</td>
       </tr>
       <tr>
-          <td>TransCoder</td>
-          <td><b>76.9</b></td>
-          <td>36.8</td>
-          <td>31.0</td>
-          <td>17.1</td>
-          <td>29.1</td>
-          <td>0.1</td>
-          <td><b>100</b></td>
-          <td>49.4</td>
-          <td>37.6</td>
-          <td>18.5</td>
-          <td>31.9</td>
-          <td>0.0</td>
+          <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
+          <td align ="center"><b>76.9</b></td>
+          <td align ="center">36.8</td>
+          <td align ="center">31.0</td>
+          <td align ="center">17.1</td>
+          <td align ="center">29.1</td>
+          <td align ="center">0.1</td>
+          <td align ="center"><b>100</b></td>
+          <td align ="center">49.4</td>
+          <td align ="center">37.6</td>
+          <td align ="center">18.5</td>
+          <td align ="center">31.9</td>
+          <td align ="center">0.0</td>
       </tr>
       <tr>
           <td rowspan=2>From Scratch</td>
           <td>Seq2Seq+Attn.</td>
-          <td>66.5</td>
-          <td>56.3</td>
-          <td>39.1</td>
-          <td>18.4</td>
-          <td>37.9</td>
-          <td>1.0</td>
-          <td>71.8</td>
-          <td>62.7</td>
-          <td>46.6</td>
-          <td>28.5</td>
-          <td>43.0</td>
-          <td>0.8</td>
+          <td align ="center">66.5</td>
+          <td align ="center">56.3</td>
+          <td align ="center">39.1</td>
+          <td align ="center">18.4</td>
+          <td align ="center">37.9</td>
+          <td align ="center">1.0</td>
+          <td align ="center">71.8</td>
+          <td align ="center">62.7</td>
+          <td align ="center">46.6</td>
+          <td align ="center">28.5</td>
+          <td align ="center">43.0</td>
+          <td align ="center">0.8</td>
       </tr>
       <tr>
           <td>Transformer</td>
-          <td>61.5</td>
-          <td>38.9</td>
-          <td>34.2</td>
-          <td>16.5</td>
-          <td>29.1</td>
-          <td>0.0</td>
-          <td>67.4</td>
-          <td>45.6</td>
-          <td>45.7</td>
-          <td>26.4</td>
-          <td>37.4</td>
-          <td>0.1</td>
+          <td align ="center">61.5</td>
+          <td align ="center">38.9</td>
+          <td align ="center">34.2</td>
+          <td align ="center">16.5</td>
+          <td align ="center">29.1</td>
+          <td align ="center">0.0</td>
+          <td align ="center">67.4</td>
+          <td align ="center">45.6</td>
+          <td align ="center">45.7</td>
+          <td align ="center">26.4</td>
+          <td align ="center">37.4</td>
+          <td align ="center">0.1</td>
       </tr>
       <tr>
           <td rowspan=6>Pre-trained</td>
-          <td>CodeGPT</td>
-          <td>47.3</td>
-          <td>38.2</td>
-          <td>32.5</td>
-          <td>11.5</td>
-          <td>26.1</td>
-          <td>1.1</td>
-          <td>71.2</td>
-          <td>44.0</td>
-          <td>38.8</td>
-          <td>26.7</td>
-          <td>33.8</td>
-          <td>0.1</td>
+          <td><a href="https://arxiv.org/pdf/2102.04664.pdf" target="_blank">CodeGPT</a></td>
+          <td align ="center">47.3</td>
+          <td align ="center">38.2</td>
+          <td align ="center">32.5</td>
+          <td align ="center">11.5</td>
+          <td align ="center">26.1</td>
+          <td align ="center">1.1</td>
+          <td align ="center">71.2</td>
+          <td align ="center">44.0</td>
+          <td align ="center">38.8</td>
+          <td align ="center">26.7</td>
+          <td align ="center">33.8</td>
+          <td align ="center">0.1</td>
       </tr>
       <tr>
-          <td>CodeGPT-adapted</td>
-          <td>48.1</td>
-          <td>38.2</td>
-          <td>32.5</td>
-          <td>12.1</td>
-          <td>26.2</td>
-          <td>1.2</td>
-          <td>68.6</td>
-          <td>42.4</td>
-          <td>37.2</td>
-          <td>27.2</td>
-          <td>33.1</td>
-          <td>0.5</td>
+          <td><a href="https://arxiv.org/pdf/2102.04664.pdf" target="_blank">CodeGPT-adapted</a></td>
+          <td align ="center">48.1</td>
+          <td align ="center">38.2</td>
+          <td align ="center">32.5</td>
+          <td align ="center">12.1</td>
+          <td align ="center">26.2</td>
+          <td align ="center">1.2</td>
+          <td align ="center">68.6</td>
+          <td align ="center">42.4</td>
+          <td align ="center">37.2</td>
+          <td align ="center">27.2</td>
+          <td align ="center">33.1</td>
+          <td align ="center">0.5</td>
       </tr>
       <tr>
-          <td>CodeBERT</td>
-          <td>62.3</td>
-          <td>59.3</td>
-          <td>37.7</td>
-          <td>16.2</td>
-          <td>36.7</td>
-          <td>0.5</td>
-          <td>74.7</td>
-          <td>55.3</td>
-          <td>38.4</td>
-          <td>22.5</td>
-          <td>36.1</td>
-          <td>0.6</td>
+          <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
+          <td align ="center">62.3</td>
+          <td align ="center">59.3</td>
+          <td align ="center">37.7</td>
+          <td align ="center">16.2</td>
+          <td align ="center">36.7</td>
+          <td align ="center">0.5</td>
+          <td align ="center">74.7</td>
+          <td align ="center">55.3</td>
+          <td align ="center">38.4</td>
+          <td align ="center">22.5</td>
+          <td align ="center">36.1</td>
+          <td align ="center">0.6</td>
       </tr>
       <tr>
-          <td>GraphCodeBERT</td>
-          <td>65.7</td>
-          <td>59.7</td>
-          <td>38.9</td>
-          <td>16.4</td>
-          <td>37.1</td>
-          <td>0.7</td>
-          <td>57.2</td>
-          <td>60.6</td>
-          <td>48.4</td>
-          <td>20.6</td>
-          <td>40.1</td>
-          <td>0.4</td>
+          <td><a href="https://arxiv.org/pdf/2009.08366.pdf" target="_blank">GraphCodeBERT</a></td>
+          <td align ="center">65.7</td>
+          <td align ="center">59.7</td>
+          <td align ="center">38.9</td>
+          <td align ="center">16.4</td>
+          <td align ="center">37.1</td>
+          <td align ="center">0.7</td>
+          <td align ="center">57.2</td>
+          <td align ="center">60.6</td>
+          <td align ="center">48.4</td>
+          <td align ="center">20.6</td>
+          <td align ="center">40.1</td>
+          <td align ="center">0.4</td>
       </tr>
       <tr>
-          <td>PLBART<sub>mono</sub></td>
-          <td>76.4</td>
-          <td><b>67.1</b></td>
-          <td><b>42.6</b></td>
-          <td><b>19.3</b></td>
-          <td><b>43.3</b></td>
-          <td><b>2.4</b></td>
-          <td>34.4</td>
-          <td>69.1</td>
-          <td><b>57.1</b></td>
-          <td>34.0</td>
-          <td>51.4</td>
-          <td><b>1.2</b></td>
+          <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>mono</sub></a></td>
+          <td align ="center">76.4</td>
+          <td align ="center"><b>67.1</b></td>
+          <td align ="center"><b>42.6</b></td>
+          <td align ="center"><b>19.3</b></td>
+          <td align ="center"><b>43.3</b></td>
+          <td align ="center"><b>2.4</b></td>
+          <td align ="center">34.4</td>
+          <td align ="center">69.1</td>
+          <td align ="center"><b>57.1</b></td>
+          <td align ="center">34.0</td>
+          <td align ="center">51.4</td>
+          <td align ="center"><b>1.2</b></td>
       </tr>
       <tr>
-          <td>PLBART<sub>multi</sub></td>
-          <td>70.4</td>
-          <td><b>67.1</b></td>
-          <td>42.0</td>
-          <td>17.6</td>
-          <td>42.4</td>
-          <td><b>2.4</b></td>
-          <td>30.8</td>
-          <td><b>69.4</b></td>
-          <td>56.6</td>
-          <td><b>34.5</b></td>
-          <td><b>51.8</b></td>
-          <td>1.0</td>
+          <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a>/td>
+          <td align ="center">70.4</td>
+          <td align ="center"><b>67.1</b></td>
+          <td align ="center">42.0</td>
+          <td align ="center">17.6</td>
+          <td align ="center">42.4</td>
+          <td align ="center"><b>2.4</b></td>
+          <td align ="center">30.8</td>
+          <td align ="center"><b>69.4</b></td>
+          <td align ="center">56.6</td>
+          <td align ="center"><b>34.5</b></td>
+          <td align ="center"><b>51.8</b></td>
+          <td align ="center">1.0</td>
       </tr>
     </tbody>
 </table>  

@@ -102,17 +102,32 @@ bash run.sh python java plbart-multilingual;
         <tr>
             <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
             <td align ="center">464</td>
-            <td align ="center">142</td>
-            <td align ="center">88</td>
-            <td align ="center">230</td>
-            <td align ="center">18</td>
-            <td align ="center">4</td>
+            <td align ="center">181</td>
+            <td align ="center">89</td>
+            <td align ="center">191</td>
+            <td align ="center">5</td>
+            <td align ="center">3</td>
             <td align ="center">482</td>
-            <td align ="center">198</td>
-            <td align ="center">107</td>
-            <td align ="center">169</td>
+            <td align ="center">240</td>
+            <td align ="center">97</td>
+            <td align ="center">139</td>
+            <td align ="center">0</td>
+            <td align ="center">6</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TransCoder-DOBF</a></td>
+            <td align ="center">464</td>
+            <td align ="center">150</td>
+            <td align ="center">101</td>
+            <td align ="center">205</td>
             <td align ="center">4</td>
             <td align ="center">8</td>
+            <td align ="center">482</td>
+            <td align ="center">211</td>
+            <td align ="center">83</td>
+            <td align ="center">185</td>
+            <td align ="center">1</td>
+            <td align ="center">3</td>
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
@@ -199,9 +214,16 @@ bash run.sh python java plbart-multilingual;
         <tr>
             <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
             <td align ="center">0.0%</td>
-            <td align ="center">30.6%</td>
-            <td align ="center">31.5%</td>
-            <td align ="center">9.5%</td>
+            <td align ="center">39.0%</td>
+            <td align ="center">41.9%</td>
+            <td align ="center">7.9%</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TransCoder-DOBF</a></td>
+            <td align ="center">0.0%</td>
+            <td align ="center">32.3%</td>
+            <td align ="center">36.9%</td>
+            <td align ="center">6.8%</td>
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
@@ -262,18 +284,33 @@ bash run.sh python java plbart-multilingual;
     <tbody>
         <tr>
             <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
-            <td align ="center">49.6%</td>
-            <td align ="center">72.4</td>
-            <td align ="center">2.0</td>
-            <td align ="center">58.6</td>
-            <td align ="center">66.1</td>
-            <td align ="center">68.7</td>
-            <td align ="center">35.1%</td>
-            <td align ="center">65.3</td>
-            <td align ="center">0.4</td>
-            <td align ="center">72.7</td>
-            <td align ="center">70.1</td>
-            <td align ="center">70.7</td>
+            <td align ="center">41.2%</td>
+            <td align ="center">68.3</td>
+            <td align ="center">0.5</td>
+            <td align ="center">53.1</td>
+            <td align ="center">62.9</td>
+            <td align ="center">64.7</td>
+            <td align ="center">28.8%</td>
+            <td align ="center">55.5</td>
+            <td align ="center">0.0</td>
+            <td align ="center">61.3</td>
+            <td align ="center">60.5</td>
+            <td align ="center">62.1</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TransCoder-DOBF</a></td>
+            <td align ="center">44.2%</td>
+            <td align ="center">67.3</td>
+            <td align ="center">0.7</td>
+            <td align ="center">53.2</td>
+            <td align ="center">62.3</td>
+            <td align ="center">64.1</td>
+            <td align ="center">38.4%</td>
+            <td align ="center">63.6</td>
+            <td align ="center">70.6</td>
+            <td align ="center">61.4</td>
+            <td align ="center">60.1</td>
+            <td align ="center">63.9</td>
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>

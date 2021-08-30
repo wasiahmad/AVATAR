@@ -6,6 +6,7 @@ CODE_DIR_HOME=`realpath ..`;
 
 GPU=${1:-0};
 EVAL_DATA=${2:-avatar};
+MODEL_NAME=${3:-'transcoder-dobf'};
 
 export CUDA_VISIBLE_DEVICES=$GPU
 evaluator_script="${CODE_DIR_HOME}/evaluation";
@@ -37,10 +38,14 @@ mkdir -p $RESULT_DIR
 FILE_PREF=${RESULT_DIR}/test;
 RESULT_FILE=${RESULT_DIR}/result.txt;
 
-if [[ "$SOURCE_LANG" = "java" && "$TARGET_LANG" = "python" ]]; then
-    MODEL_PATH=${pretrained_model}/model_1.pth;
-elif [[ "$SOURCE_LANG" = "python" && "$TARGET_LANG" = "java" ]]; then
-    MODEL_PATH=${pretrained_model}/model_2.pth;
+if [[ $MODEL_NAME == 'transcoder-dobf' ]]; then
+    MODEL_PATH=${pretrained_model}/translator_transcoder_size_from_DOBF.pth;
+else
+    if [[ "$SOURCE_LANG" = "java" && "$TARGET_LANG" = "python" ]]; then
+        MODEL_PATH=${pretrained_model}/TransCoder_model_1.pth;
+    elif [[ "$SOURCE_LANG" = "python" && "$TARGET_LANG" = "java" ]]; then
+        MODEL_PATH=${pretrained_model}/TransCoder_model_2.pth;
+    fi
 fi
 
 export PYTHONPATH=$CODE_DIR_HOME;
@@ -48,7 +53,7 @@ python translate.py \
     --model_path $MODEL_PATH \
     --src_lang $SOURCE_LANG \
     --tgt_lang $TARGET_LANG \
-    --BPE_path ./data/BPE_with_comments_codes \
+    --BPE_path ./bpe/codes \
     --input_file $INPUT_FILE \
     --output_file $FILE_PREF.output \
     --beam_size 5;

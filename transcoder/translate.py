@@ -17,8 +17,8 @@
 
 import os
 import torch
-import argparse
 import fastBPE
+import argparse
 
 from tqdm import tqdm
 from transcoder.XLM.data.dictionary import (
@@ -29,8 +29,12 @@ from transcoder.XLM.data.dictionary import (
     UNK_WORD,
     MASK_WORD
 )
+from transformers import RobertaTokenizer
 from transcoder.XLM.model import build_model
-from transcoder.XLM.utils import AttrDict
+from transcoder.XLM.utils import (
+    restore_roberta_segmentation_sentence,
+    AttrDict
+)
 
 SUPPORTED_LANGUAGES = ['cpp', 'java', 'python']
 
@@ -57,29 +61,27 @@ def get_parser():
                         default="", help="Input file path")
     parser.add_argument("--output_file", type=str,
                         default="", help="Output file path")
+    parser.add_argument("--batch_size", type=int, default=8, help="Batch size.")
 
     return parser
+
+
+def apply_bpe(tokenizer, code):
+    lines = code.split("\n")
+    return "\n".join(
+        [" ".join(tokenizer._tokenize(line.strip())) for line in lines]
+    )
 
 
 class Translator:
     def __init__(self, params):
         reloaded = torch.load(params.model_path, map_location='cpu')
-        reloaded['encoder'] = {
-            (k[len('module.'):] if k.startswith('module.') else k): v
-            for k, v in reloaded['encoder'].items()
-        }
-        assert 'decoder' in reloaded or ('decoder_0' in reloaded and 'decoder_1' in reloaded)
-        if 'decoder' in reloaded:
-            decoders_names = ['decoder']
-        else:
-            decoders_names = ['decoder_0', 'decoder_1']
-        for decoder_name in decoders_names:
-            reloaded[decoder_name] = {
-                (k[len('module.'):] if k.startswith('module.') else k): v
-                for k, v in reloaded[decoder_name].items()
-            }
-
-        self.reloaded_params = AttrDict(reloaded['params'])
+        # change params of the reloaded model so that it will
+        # relaod its own weights and not the MLM or DOBF pretrained model
+        reloaded["params"]["reload_model"] = ",".join([params.model_path] * 2)
+        reloaded["params"]["lgs_mapping"] = ""
+        reloaded["params"]["reload_encoder_for_decoder"] = False
+        self.reloaded_params = AttrDict(reloaded["params"])
 
         # build dictionary / update parameters
         self.dico = Dictionary(
@@ -92,49 +94,62 @@ class Translator:
         assert self.reloaded_params.unk_index == self.dico.index(UNK_WORD)
         assert self.reloaded_params.mask_index == self.dico.index(MASK_WORD)
 
-        # build model / reload weights
-        self.reloaded_params['reload_model'] = ','.join([params.model_path] * 2)
+        # build model / reload weights (in the build_model method)
         encoder, decoder = build_model(self.reloaded_params, self.dico)
-
         self.encoder = encoder[0]
-        self.encoder.load_state_dict(reloaded['encoder'])
-        assert len(reloaded['encoder'].keys()) == len(
-            list(p for p, _ in self.encoder.state_dict().items()))
-
         self.decoder = decoder[0]
-        self.decoder.load_state_dict(reloaded['decoder'])
-        assert len(reloaded['decoder'].keys()) == len(
-            list(p for p, _ in self.decoder.state_dict().items()))
-
         self.encoder.cuda()
         self.decoder.cuda()
-
         self.encoder.eval()
         self.decoder.eval()
-        self.bpe_model = fastBPE.fastBPE(os.path.abspath(params.BPE_path))
 
-    def translate(self, input, lang1, lang2, n=1, beam_size=1, sample_temperature=None, device='cuda:0'):
+        # reload bpe
+        if getattr(self.reloaded_params, "roberta_mode", False):
+            self.bpe_model = RobertaTokenizer.from_pretrained("roberta-base")
+        else:
+            self.bpe_model = fastBPE.fastBPE(os.path.abspath(params.BPE_path))
+
+    def translate(
+            self,
+            batch_input,
+            lang1,
+            lang2,
+            n=1,
+            beam_size=1,
+            sample_temperature=None,
+            device='cuda:0'
+    ):
+        assert lang1 in {'python', 'java', 'cpp'}, lang1
+        assert lang2 in {'python', 'java', 'cpp'}, lang2
+
+        lang1 += '_sa'
+        lang2 += '_sa'
+
         with torch.no_grad():
-            assert lang1 in {'python', 'java', 'cpp'}, lang1
-            assert lang2 in {'python', 'java', 'cpp'}, lang2
-
-            DEVICE = device
-            lang1 += '_sa'
-            lang2 += '_sa'
-
             lang1_id = self.reloaded_params.lang2id[lang1]
             lang2_id = self.reloaded_params.lang2id[lang2]
 
-            tokens = [t for t in input.split()]
-            tokens = self.bpe_model.apply(tokens)
-            tokens = ['</s>'] + tokens + ['</s>']
-            input = " ".join(tokens)
+            input_lengths = []
+            input_ids = []
+            for input in batch_input:
+                tokens = [t for t in input.split()]
+                if getattr(self.reloaded_params, "roberta_mode", False):
+                    tokens = apply_bpe(self.bpe_model, " ".join(tokens)).split()
+                else:
+                    tokens = self.bpe_model.apply(tokens)
+                tokens = ['</s>'] + tokens + ['</s>']
+                input_ids.append([self.dico.index(w) for w in tokens])
+                input_lengths.append(len(tokens))
 
-            # create batch
-            len1 = len(input.split())
-            len1 = torch.LongTensor(1).fill_(len1).to(DEVICE)
+            max_length = max(input_lengths)
+            for i in range(len(batch_input)):
+                num_pad_tokens = max_length - input_lengths[i]
+                if num_pad_tokens > 0:
+                    input_ids[i].extend([self.dico.index(PAD_WORD)] * num_pad_tokens)
 
-            x1 = torch.LongTensor([self.dico.index(w) for w in input.split()]).to(DEVICE)[:, None]
+            len1 = torch.tensor(input_lengths, dtype=torch.long).to(device)
+            x1 = torch.tensor(input_ids, dtype=torch.long).to(device)
+            x1 = x1.transpose(0, 1)
             langs1 = x1.clone().fill_(lang1_id)
 
             # `x` LongTensor(slen, bs), containing word indices
@@ -151,27 +166,43 @@ class Translator:
 
             if beam_size == 1:
                 x2, len2 = self.decoder.generate(
-                    enc1, len1, lang2_id,
-                    max_len=int(min(self.reloaded_params.max_len, 3 * len1.max().item() + 10)),
+                    enc1,
+                    len1,
+                    lang2_id,
+                    max_len=int(
+                        min(self.reloaded_params.max_len, 3 * len1.max().item() + 10)
+                    ),
                     sample_temperature=sample_temperature
                 )
             else:
-                x2, len2 = self.decoder.generate_beam(
-                    enc1, len1, lang2_id,
-                    max_len=int(min(self.reloaded_params.max_len, 3 * len1.max().item() + 10)),
-                    early_stopping=False, length_penalty=1.0, beam_size=beam_size,
+                x2, len2, _ = self.decoder.generate_beam(
+                    enc1,
+                    len1,
+                    lang2_id,
+                    max_len=int(
+                        min(self.reloaded_params.max_len, 3 * len1.max().item() + 10)
+                    ),
+                    early_stopping=False,
+                    length_penalty=1.0,
+                    beam_size=beam_size,
                 )
 
-            tok = []
-            for i in range(x2.shape[1]):
-                wid = [self.dico[x2[j, i].item()] for j in range(len(x2))][1:]
-                wid = wid[:wid.index(EOS_WORD)] if EOS_WORD in wid else wid
-                tok.append(" ".join(wid).replace("@@ ", ""))
+            batch_result = []
+            # x2 = seq-len, beam-size, bsz
+            x2 = x2.permute(2, 0, 1).cpu().numpy()
+            # now x2 = bsz, seq-len, beam-size
+            for idx in range(x2.shape[0]):
+                beam_outputs = []
+                for i in range(x2.shape[2]):
+                    wid = [self.dico[x2[idx, j, i]] for j in range(len(x2[idx]))][1:]
+                    wid = wid[:wid.index(EOS_WORD)] if EOS_WORD in wid else wid
+                    if getattr(self.reloaded_params, "roberta_mode", False):
+                        beam_outputs.append(restore_roberta_segmentation_sentence(" ".join(wid)))
+                    else:
+                        beam_outputs.append(" ".join(wid).replace("@@ ", ""))
+                batch_result.append(beam_outputs)
 
-            results = []
-            for t in tok:
-                results.append(t)
-            return results
+            return batch_result
 
 
 if __name__ == '__main__':
@@ -188,16 +219,27 @@ if __name__ == '__main__':
     # Initialize translator
     translator = Translator(params)
 
-    input_lines = []
+    inputs_in_batches = []
     with open(params.input_file, encoding='utf8') as f:
-        for line in f:
+        input_lines = []
+        for idx, line in enumerate(f):
             input_lines.append(line.strip())
+            if (idx + 1) % params.batch_size == 0:
+                inputs_in_batches.append(input_lines)
+                input_lines = []
+
+        if input_lines:
+            inputs_in_batches.append(input_lines)
 
     with open(params.output_file, 'w', encoding='utf8') as fw:
-        for line in tqdm(input_lines, total=len(input_lines)):
+        for batch_input in tqdm(inputs_in_batches, total=len(inputs_in_batches)):
             with torch.no_grad():
                 output = translator.translate(
-                    line, lang1=params.src_lang, lang2=params.tgt_lang, beam_size=params.beam_size
+                    batch_input,
+                    lang1=params.src_lang,
+                    lang2=params.tgt_lang,
+                    beam_size=params.beam_size
                 )
-                assert len(output) == params.beam_size
-                fw.write(output[0] + '\n')
+                for single_out in output:
+                    assert len(single_out) == params.beam_size
+                    fw.write(single_out[0] + '\n')
