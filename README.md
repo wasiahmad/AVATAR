@@ -153,7 +153,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
     <tbody>
         <tr>
           <td rowspan=3>None</td>
-          <td align ="center">Naive Copy</td>
+          <td>Naive Copy</td>
           <td align ="center">-</td>
           <td align ="center">23.4</td>
           <td align ="center">-</td>
@@ -187,7 +187,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center"><b>77.7</b></td>
           <td align ="center">43.4</td>
           <td align ="center">29.7</td>
-          <td align ="center">33.9</td>
+          <td align ="center"><b>33.9</b></td>
           <td align ="center">34.8</td>
           <td align ="center">0.0</td>
           <td align ="center"><b>100</b></td>
@@ -294,7 +294,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">76.4</td>
           <td align ="center"><b>67.1</b></td>
           <td align ="center"><b>42.6</b></td>
-          <td align ="center"><b>19.3</b></td>
+          <td align ="center">19.3</td>
           <td align ="center"><b>43.3</b></td>
           <td align ="center"><b>2.4</b></td>
           <td align ="center">34.4</td>

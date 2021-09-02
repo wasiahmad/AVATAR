@@ -17,8 +17,9 @@
 
 import os
 import torch
+import random
+import logging
 import argparse
-import fastBPE
 
 from tqdm import tqdm
 from codegen.model.src.data.dictionary import (
@@ -29,10 +30,31 @@ from codegen.model.src.data.dictionary import (
     UNK_WORD,
     MASK_WORD
 )
-from codegen.model.src.utils import AttrDict
+from codegen.preprocessing.bpe_modes.fast_bpe_mode import FastBPEMode
+from codegen.model.src.utils import (
+    AttrDict,
+    show_batch
+)
 from transcoder.XLM.model import build_model
 
 SUPPORTED_LANGUAGES = ['cpp', 'java', 'python']
+
+
+def init_logger(log_file=None):
+    log_format = logging.Formatter("[%(asctime)s %(levelname)s] %(message)s")
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    if log_file and log_file != '':
+        file_handler = logging.FileHandler(log_file, encoding='utf8')
+        file_handler.setFormatter(log_format)
+        logger.addHandler(file_handler)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_format)
+    logger.addHandler(console_handler)
+
+    return logger
 
 
 def get_parser():
@@ -57,6 +79,8 @@ def get_parser():
                         default="", help="Input file path")
     parser.add_argument("--output_file", type=str,
                         default="", help="Output file path")
+    parser.add_argument("--batch_size", type=int, default=1, help="Batch size.")
+    parser.add_argument("--show_example", action='store_true', help="show examples.")
 
     return parser
 
@@ -68,11 +92,11 @@ class Translator:
             (k[len('module.'):] if k.startswith('module.') else k): v
             for k, v in reloaded['encoder'].items()
         }
-        assert 'decoder' in reloaded or ('decoder_0' in reloaded and 'decoder_1' in reloaded)
-        if 'decoder' in reloaded:
-            decoders_names = ['decoder']
-        else:
-            decoders_names = ['decoder_0', 'decoder_1']
+
+        assert 'decoder' in reloaded or \
+               ('decoder_0' in reloaded and 'decoder_1' in reloaded)
+        decoders_names = ['decoder'] if 'decoder' in reloaded else ['decoder_0', 'decoder_1']
+
         for decoder_name in decoders_names:
             reloaded[decoder_name] = {
                 (k[len('module.'):] if k.startswith('module.') else k): v
@@ -95,83 +119,110 @@ class Translator:
         # build model / reload weights
         self.reloaded_params['reload_model'] = ','.join([params.model_path] * 2)
         encoder, decoder = build_model(self.reloaded_params, self.dico)
-
         self.encoder = encoder[0]
-        self.encoder.load_state_dict(reloaded['encoder'])
-        assert len(reloaded['encoder'].keys()) == len(
-            list(p for p, _ in self.encoder.state_dict().items()))
-
         self.decoder = decoder[0]
-        self.decoder.load_state_dict(reloaded['decoder'])
-        assert len(reloaded['decoder'].keys()) == len(
-            list(p for p, _ in self.decoder.state_dict().items()))
-
         self.encoder.cuda()
         self.decoder.cuda()
-
         self.encoder.eval()
         self.decoder.eval()
-        self.bpe_model = fastBPE.fastBPE(os.path.abspath(params.BPE_path))
 
-    def translate(self, input, lang1, lang2, n=1, beam_size=1, sample_temperature=None, device='cuda:0'):
-        with torch.no_grad():
-            assert lang1 in {'python', 'java', 'cpp'}, lang1
-            assert lang2 in {'python', 'java', 'cpp'}, lang2
+        # reload bpe
+        self.bpe_model = FastBPEMode(
+            codes=os.path.abspath(params.BPE_path), vocab_path=None
+        )
 
-            DEVICE = device
-            lang1 += '_sa'
-            lang2 += '_sa'
+    def translate(
+            self,
+            batch_input,
+            lang1,
+            lang2,
+            n=1,
+            beam_size=1,
+            sample_temperature=None,
+            device='cuda:0',
+            logger=None,
+            show_example=False,
+    ):
+        assert lang1 in {'python', 'java', 'cpp'}, lang1
+        assert lang2 in {'python', 'java', 'cpp'}, lang2
 
-            lang1_id = self.reloaded_params.lang2id[lang1]
-            lang2_id = self.reloaded_params.lang2id[lang2]
+        lang1 += '_sa'
+        lang2 += '_sa'
 
-            tokens = [t for t in input.split()]
-            tokens = self.bpe_model.apply(tokens)
+        lang1_id = self.reloaded_params.lang2id[lang1]
+        lang2_id = self.reloaded_params.lang2id[lang2]
+
+        input_lengths = []
+        input_ids = []
+        for input in batch_input:
+            tokens = input.split()
+            tokens = self.bpe_model.apply_bpe(" ".join(tokens)).split()
             tokens = ['</s>'] + tokens + ['</s>']
-            input = " ".join(tokens)
+            input_ids.append([self.dico.index(w) for w in tokens])
+            input_lengths.append(len(tokens))
 
-            # create batch
-            len1 = len(input.split())
-            len1 = torch.LongTensor(1).fill_(len1).to(DEVICE)
+        max_length = max(input_lengths)
+        for i in range(len(batch_input)):
+            num_pad_tokens = max_length - input_lengths[i]
+            if num_pad_tokens > 0:
+                input_ids[i].extend([self.reloaded_params.pad_index] * num_pad_tokens)
 
-            x1 = torch.LongTensor([self.dico.index(w) for w in input.split()]).to(DEVICE)[:, None]
-            langs1 = x1.clone().fill_(lang1_id)
+        len1 = torch.tensor(input_lengths, dtype=torch.long).to(device)
+        x1 = torch.tensor(input_ids, dtype=torch.long).to(device)
+        x1 = x1.transpose(0, 1)
+        langs1 = x1.clone().fill_(lang1_id)
 
-            # `x` LongTensor(slen, bs), containing word indices
-            # `lengths` LongTensor(bs), containing the length of each sentence
-            # `causal` Boolean, if True, the attention is only done over previous hidden states
-            # `positions` LongTensor(slen, bs), containing word positions
-            # `langs` LongTensor(slen, bs), containing language IDs
-            enc1 = self.encoder('fwd', x=x1, lengths=len1, langs=langs1, causal=False)
-            # move back batch size to dimension 0
-            enc1 = enc1.transpose(0, 1)
-            if n > 1:
-                enc1 = enc1.repeat(n, 1, 1)
-                len1 = len1.expand(n)
+        # `x` LongTensor(slen, bs), containing word indices
+        # `lengths` LongTensor(bs), containing the length of each sentence
+        # `causal` Boolean, if True, the attention is only done over previous hidden states
+        # `positions` LongTensor(slen, bs), containing word positions
+        # `langs` LongTensor(slen, bs), containing language IDs
+        enc1 = self.encoder('fwd', x=x1, lengths=len1, langs=langs1, causal=False)
+        # move back batch size to dimension 0
+        enc1 = enc1.transpose(0, 1)
+        if n > 1:
+            enc1 = enc1.repeat(n, 1, 1)
+            len1 = len1.expand(n)
 
-            if beam_size == 1:
-                x2, len2 = self.decoder.generate(
-                    enc1, len1, lang2_id,
-                    max_len=int(min(self.reloaded_params.max_len, 3 * len1.max().item() + 10)),
-                    sample_temperature=sample_temperature
-                )
-            else:
-                x2, len2 = self.decoder.generate_beam(
-                    enc1, len1, lang2_id,
-                    max_len=int(min(self.reloaded_params.max_len, 3 * len1.max().item() + 10)),
-                    early_stopping=False, length_penalty=1.0, beam_size=beam_size,
-                )
+        if beam_size == 1:
+            x2, len2 = self.decoder.generate(
+                enc1, len1, lang2_id,
+                max_len=int(min(self.reloaded_params.max_len, 3 * len1.max().item() + 10)),
+                sample_temperature=sample_temperature
+            )
+            x2 = x2.unsqueeze(1)  # seq-len, 1, bsz
+        else:
+            x2, len2 = self.decoder.generate_beam(
+                enc1, len1, lang2_id,
+                max_len=int(min(self.reloaded_params.max_len, 3 * len1.max().item() + 10)),
+                early_stopping=False, length_penalty=1.0, beam_size=beam_size,
+            )
 
-            tok = []
-            for i in range(x2.shape[1]):
-                wid = [self.dico[x2[j, i].item()] for j in range(len(x2))][1:]
+        # x2 = seq-len, beam-size, bsz -> bsz, seq-len, beam-size
+        x2 = x2.permute(2, 0, 1).cpu().numpy()
+
+        if show_example:
+            show_batch(
+                logger,
+                [
+                    ("source", x1.transpose(0, 1)),
+                    ("target", x2[:, :, 0].transpose(0, 1))
+                ],
+                self.dico,
+                False,
+                f"Eval {lang1}-{lang2}",
+            )
+
+        batch_result = []
+        for idx in range(x2.shape[0]):
+            beam_outputs = []
+            for i in range(x2.shape[2]):
+                wid = [self.dico[x2[idx, j, i]] for j in range(len(x2[idx]))][1:]
                 wid = wid[:wid.index(EOS_WORD)] if EOS_WORD in wid else wid
-                tok.append(" ".join(wid).replace("@@ ", ""))
+                beam_outputs.append(" ".join(wid).replace("@@ ", ""))
+            batch_result.append(beam_outputs)
 
-            results = []
-            for t in tok:
-                results.append(t)
-            return results
+        return batch_result
 
 
 if __name__ == '__main__':
@@ -188,16 +239,40 @@ if __name__ == '__main__':
     # Initialize translator
     translator = Translator(params)
 
-    input_lines = []
+    inputs_in_batches = []
     with open(params.input_file, encoding='utf8') as f:
-        for line in f:
+        input_lines = []
+        for idx, line in enumerate(f):
             input_lines.append(line.strip())
+            if (idx + 1) % params.batch_size == 0:
+                inputs_in_batches.append(input_lines)
+                input_lines = []
+
+        if input_lines:
+            inputs_in_batches.append(input_lines)
+
+    logger = None
+    if params.show_example:
+        chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+        while True:
+            log_file = "{}.log".format(
+                "".join(random.choice(chars) for _ in range(10))
+            )
+            if not os.path.exists(log_file):
+                break
+        logger = init_logger(log_file)
 
     with open(params.output_file, 'w', encoding='utf8') as fw:
-        for line in tqdm(input_lines, total=len(input_lines)):
+        for batch_input in tqdm(inputs_in_batches, total=len(inputs_in_batches)):
             with torch.no_grad():
                 output = translator.translate(
-                    line, lang1=params.src_lang, lang2=params.tgt_lang, beam_size=params.beam_size
+                    batch_input,
+                    lang1=params.src_lang,
+                    lang2=params.tgt_lang,
+                    beam_size=params.beam_size,
+                    logger=logger,
+                    show_example=False
                 )
-                assert len(output) == params.beam_size
-                fw.write(output[0] + '\n')
+                for single_out in output:
+                    assert len(single_out) == params.beam_size
+                    fw.write(single_out[0] + '\n')

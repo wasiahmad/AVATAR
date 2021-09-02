@@ -80,4 +80,4 @@ python $evaluator_script/compile.py \
 }
 
 evaluate java python;
-evaluate python java;
+#evaluate python java;

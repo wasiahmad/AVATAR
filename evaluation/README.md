@@ -387,7 +387,7 @@ bash run.sh python java plbart-multilingual;
             <td align ="center"><b>72.1</b></td>
             <td align ="center"><b>72.4</b></td>
             <td align ="center"><b>78.9</b></td>
-            <td align ="center"><b>65.8%</b></td>
+            <td align ="center">65.8%</td>
             <td align ="center">82.9</td>
             <td align ="center">14.5</td>
             <td align ="center">81.2</td>

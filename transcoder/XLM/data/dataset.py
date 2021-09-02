@@ -10,7 +10,6 @@ import math
 import numpy as np
 import torch
 
-
 logger = getLogger()
 
 
@@ -123,14 +122,13 @@ class Dataset(object):
         """
         # sentences = sorted(sentences, key=lambda x: len(x), reverse=True)
         lengths = torch.LongTensor([len(s) + 2 for s in sentences])
-        sent = torch.LongTensor(lengths.max().item(),
-                                lengths.size(0)).fill_(self.pad_index)
+        sent = torch.LongTensor(lengths.max().item(), lengths.size(0)).fill_(self.pad_index)
 
         sent[0] = self.eos_index
         for i, s in enumerate(sentences):
             if lengths[i] > 2:  # if sentence not empty
                 sent[1:lengths[i] - 1,
-                     i].copy_(torch.from_numpy(s.astype(np.int64)))
+                i].copy_(torch.from_numpy(s.astype(np.int64)))
             sent[lengths[i] - 1, i] = self.eos_index
 
         return sent, lengths
@@ -198,7 +196,8 @@ class Dataset(object):
             sent = self.batch_sentences(sent)
             yield (sent, sentence_ids) if return_indices else sent
 
-    def get_iterator(self, shuffle, tokens_per_batch, group_by_size=False, n_sentences=-1, seed=None, return_indices=False):
+    def get_iterator(self, shuffle, tokens_per_batch, group_by_size=False, n_sentences=-1, seed=None,
+                     return_indices=False):
         """
         Return a sentences iterator.
         """
@@ -207,7 +206,7 @@ class Dataset(object):
         n_sentences = len(self.pos) if n_sentences == -1 else n_sentences
         assert 0 < n_sentences <= len(self.pos)
         assert type(shuffle) is bool and type(group_by_size) is bool
-        #assert group_by_size is False or shuffle is True
+        # assert group_by_size is False or shuffle is True
 
         # sentence lengths
         lengths = self.lengths + 2
@@ -305,11 +304,11 @@ class ParallelDataset(Dataset):
             for i, s in enumerate(ids_):
                 if lengths_ids[i] > 2:  # if sentence not empty
                     ids[1:lengths_ids[i] - 1,
-                        i].copy_(torch.from_numpy(s.astype(np.int64)))
+                    i].copy_(torch.from_numpy(s.astype(np.int64)))
                 ids[lengths_ids[i] - 1, i] = self.eos_index
 
         else:
-            #sentences = sorted(sentences, key=lambda x: len(x), reverse=True)
+            # sentences = sorted(sentences, key=lambda x: len(x), reverse=True)
             ids = None
             lengths_ids = None
 
@@ -321,7 +320,7 @@ class ParallelDataset(Dataset):
         for i, s in enumerate(sentences):
             if lengths[i] > 2:  # if sentence not empty
                 sent[1:lengths[i] - 1,
-                     i].copy_(torch.from_numpy(s.astype(np.int64)))
+                i].copy_(torch.from_numpy(s.astype(np.int64)))
             sent[lengths[i] - 1, i] = self.eos_index
 
         return sent, lengths, ids, lengths_ids
@@ -338,9 +337,9 @@ class ParallelDataset(Dataset):
         # check sentences indices
         assert len(self.pos2) == (self.sent2[self.pos2[:, 1]] == eos).sum()
         assert eos <= self.sent1.min() < self.sent1.max(
-        )                    # check dictionary indices
+        )  # check dictionary indices
         assert eos <= self.sent2.min() < self.sent2.max(
-        )                    # check dictionary indices
+        )  # check dictionary indices
         # check empty sentences
         assert self.lengths1.min() > 0
         # check empty sentences

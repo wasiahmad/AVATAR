@@ -17,9 +17,9 @@ import torch
 
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
-from lang_processors.java_processor import JavaProcessor
-from lang_processors.python_processor import PythonProcessor
-from lang_processors.lang_processor import LangProcessor
+import codegen.preprocessing.lang_processors.java_processor
+import codegen.preprocessing.lang_processors.python_processor
+from codegen.preprocessing.lang_processors.lang_processor import LangProcessor
 
 TREE_SITTER_ROOT = Path(__file__).parents[2].joinpath("third_party")
 
