@@ -7,6 +7,11 @@ pretrained_model=${CODE_DIR_HOME}/models/transcoder;
 mkdir -p $pretrained_model
 
 cd $pretrained_model;
+# download from https://github.com/facebookresearch/TransCoder#download-a-pre-trained-model
+# model_1.pth for C++ -> Java, Java -> C++ and Java -> Python
+wget https://dl.fbaipublicfiles.com/transcoder/model_1.pth
+# model_2.pth for C++ -> Python, Python -> C++ and Python -> Java
+wget https://dl.fbaipublicfiles.com/transcoder/model_2.pth
 # download from https://github.com/facebookresearch/CodeGen/blob/master/docs/transcoder.md#pre-trained-models
 # model_1.pth for C++ -> Java, Java -> C++ and Java -> Python
 wget https://dl.fbaipublicfiles.com/transcoder/pre_trained_models/TransCoder_model_1.pth

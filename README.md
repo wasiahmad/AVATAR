@@ -152,7 +152,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
     </thead>
     <tbody>
         <tr>
-          <td rowspan=2>None</td>
+          <td rowspan=3>None</td>
           <td align ="center">Naive Copy</td>
           <td align ="center">-</td>
           <td align ="center">23.4</td>
@@ -169,7 +169,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
       </tr>
       <tr>
           <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
-          <td align ="center"><b>76.9</b></td>
+          <td align ="center">76.9</td>
           <td align ="center">36.8</td>
           <td align ="center">31.0</td>
           <td align ="center">17.1</td>
@@ -180,6 +180,21 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">37.6</td>
           <td align ="center">18.5</td>
           <td align ="center">31.9</td>
+          <td align ="center">0.0</td>
+      </tr>
+      <tr>
+          <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF</a></td>
+          <td align ="center"><b>77.7</b></td>
+          <td align ="center">43.4</td>
+          <td align ="center">29.7</td>
+          <td align ="center">33.9</td>
+          <td align ="center">34.8</td>
+          <td align ="center">0.0</td>
+          <td align ="center"><b>100</b></td>
+          <td align ="center">46.1</td>
+          <td align ="center">36.0</td>
+          <td align ="center">12.6</td>
+          <td align ="center">28.8</td>
           <td align ="center">0.0</td>
       </tr>
       <tr>
@@ -290,7 +305,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center"><b>1.2</b></td>
       </tr>
       <tr>
-          <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a>/td>
+          <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a></td>
           <td align ="center">70.4</td>
           <td align ="center"><b>67.1</b></td>
           <td align ="center">42.0</td>

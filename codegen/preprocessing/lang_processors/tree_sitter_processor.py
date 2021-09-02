@@ -4,18 +4,16 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
-
-import re
-from pathlib import Path
-from logging import getLogger
-from tree_sitter import Language, Parser
-
-from lang_processors.lang_processor import LangProcessor
-from lang_processors.tokenization_utils import (
+from codegen.preprocessing.lang_processors.lang_processor import LangProcessor
+from codegen.preprocessing.lang_processors.tokenization_utils import (
     process_string,
     replace_tokens,
     indent_lines,
 )
+import re
+from tree_sitter import Language, Parser
+from pathlib import Path
+from logging import getLogger
 
 NEW_LINE = "NEW_LINE"
 
@@ -199,3 +197,4 @@ class TreeSitterLangProcessor(LangProcessor):
         if isinstance(code, str):
             code = code.split()
         return code[code.index("(") - 1]
+   

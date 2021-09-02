@@ -9,8 +9,8 @@ sys.path.append("..")
 from os import listdir
 from difflib import SequenceMatcher
 from pathlib import Path
-from lang_processors.java_processor import JavaProcessor
-from lang_processors.python_processor import PythonProcessor
+from codegen.preprocessing.lang_processors.java_processor import JavaProcessor
+from codegen.preprocessing.lang_processors.python_processor import PythonProcessor
 
 root_folder = "../third_party"
 jprocessor = JavaProcessor(root_folder=root_folder)

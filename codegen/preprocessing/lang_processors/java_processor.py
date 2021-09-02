@@ -4,12 +4,17 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
-import re
-from lang_processors.tree_sitter_processor import TreeSitterLangProcessor
-from lang_processors.tokenization_utils import (
+from codegen.preprocessing.lang_processors.tree_sitter_processor import (
+    TreeSitterLangProcessor,
+)
+from codegen.preprocessing.obfuscation.utils_deobfuscation import dico_to_string
+from codegen.preprocessing.obfuscation import javalang_obfuscator
+
+from codegen.preprocessing.lang_processors.tokenization_utils import (
     ind_iter,
     NEWLINE_TOKEN,
 )
+import re
 
 JAVA_TOKEN2CHAR = {
     "STOKEN00": "//",
@@ -40,6 +45,10 @@ class JavaProcessor(TreeSitterLangProcessor):
             root_folder=root_folder,
         )
 
+    def obfuscate_code(self, code):
+        res, dico = javalang_obfuscator.obfuscate(code)
+        return res, dico_to_string(dico)
+
     def extract_functions(self, tokenized_code):
         """Extract functions from tokenized Java code"""
         if isinstance(tokenized_code, str):
@@ -68,8 +77,10 @@ class JavaProcessor(TreeSitterLangProcessor):
                     tokens_no_newline.append(tokens[index])
 
                 if token == ")" and (
-                        tokens_no_newline[0] == "{" or
-                        (tokens_no_newline[0] == "throws" and tokens_no_newline[2] == "{")
+                        tokens_no_newline[0] == "{"
+                        or (
+                                tokens_no_newline[0] == "throws" and tokens_no_newline[2] == "{"
+                        )
                 ):
                     # go previous until the start of function
                     while token not in [";", "}", "{", "*/", "ENDCOM"]:

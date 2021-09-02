@@ -13,10 +13,9 @@ evaluator_script="${CODE_DIR_HOME}/evaluation";
 codebleu_path="${CODE_DIR_HOME}/evaluation/CodeBLEU";
 pretrained_model=${CODE_DIR_HOME}/models/transcoder;
 
-if [[ $EVAL_DATA == 'avatar' ]]; then
-    path_2_data=${CODE_DIR_HOME}/data;
-elif [[ $EVAL_DATA == 'g4g' ]]; then
-    path_2_data=${CODE_DIR_HOME}/evaluation/TransCoder;
+path_2_data=${CODE_DIR_HOME}/data;
+if [[ $EVAL_DATA == 'g4g' ]]; then
+    path_2_data=${path_2_data}/transcoder_test_gfg;
 fi
 
 
@@ -25,12 +24,15 @@ function evaluate () {
 SOURCE_LANG=$1
 TARGET_LANG=$2
 INPUT_FILE=${path_2_data}/test.java-python.${SOURCE_LANG};
+BPE_PATH=${CODE_DIR_HOME}/codegen/bpe/cpp-java-python/codes
 
+RESULT_DIR=${CURRENT_DIR}/${EVAL_DATA}/${MODEL_NAME}/${SOURCE_LANG}2${TARGET_LANG};
+TEXT_REF=""
 if [[ $EVAL_DATA == 'g4g' ]]; then
-    RESULT_DIR=${CURRENT_DIR}/${EVAL_DATA}/${SOURCE_LANG}2${TARGET_LANG}/transcoder_eval;
+    RESULT_DIR=${RESULT_DIR}/transcoder_eval;
     GOUND_TRUTH_PATH=${path_2_data}/test.java-python.${TARGET_LANG};
+    TEXT_REF="--txt_ref"
 else
-    RESULT_DIR=${CURRENT_DIR}/${EVAL_DATA}/${SOURCE_LANG}2${TARGET_LANG};
     GOUND_TRUTH_PATH=${path_2_data}/test.jsonl;
 fi
 
@@ -38,7 +40,10 @@ mkdir -p $RESULT_DIR
 FILE_PREF=${RESULT_DIR}/test;
 RESULT_FILE=${RESULT_DIR}/result.txt;
 
-if [[ $MODEL_NAME == 'transcoder-dobf' ]]; then
+if [[ $MODEL_NAME == 'transcoder-ft' ]]; then
+    MODEL_PATH=${CURRENT_DIR}/${EVAL_DATA}/${MODEL_NAME}/transcoder-mt;
+    MODEL_PATH=${MODEL_PATH}/best-valid_python-java_mt_bleu.pth;
+elif [[ $MODEL_NAME == 'transcoder-dobf' ]]; then
     MODEL_PATH=${pretrained_model}/translator_transcoder_size_from_DOBF.pth;
 else
     if [[ "$SOURCE_LANG" = "java" && "$TARGET_LANG" = "python" ]]; then
@@ -53,26 +58,31 @@ python translate.py \
     --model_path $MODEL_PATH \
     --src_lang $SOURCE_LANG \
     --tgt_lang $TARGET_LANG \
-    --BPE_path ./bpe/codes \
+    --BPE_path $BPE_PATH \
     --input_file $INPUT_FILE \
     --output_file $FILE_PREF.output \
     --beam_size 5;
 
 python $evaluator_script/evaluator.py \
-    --references $GOUND_TRUTH_PATH \
-    --txt_ref \
+    --references $GOUND_TRUTH_PATH $TEXT_REF \
     --predictions $FILE_PREF.output \
     --language $TARGET_LANG \
-    2>&1 | tee -a $RESULT_FILE;
+    2>&1 | tee $RESULT_FILE;
 
 cd $codebleu_path;
 python calc_code_bleu.py \
-    --ref $GOUND_TRUTH_PATH \
-    --txt_ref \
+    --ref $GOUND_TRUTH_PATH $TEXT_REF \
     --hyp $FILE_PREF.output \
     --lang $TARGET_LANG \
     2>&1 | tee -a $RESULT_FILE;
 cd $CURRENT_DIR;
+
+[[ $EVAL_DATA == 'g4g' ]] && return 0;
+
+python $evaluator_script/compile.py \
+    --input_file $FILE_PREF.output \
+    --language $TARGET_LANG \
+    2>&1 | tee -a $RESULT_FILE;
 
 }
 

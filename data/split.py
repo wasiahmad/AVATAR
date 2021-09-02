@@ -56,14 +56,22 @@ def split(args):
         fw.write('\n'.join([json.dumps(ex) for ex in test_examples]) + '\n')
 
 
-def get_all_possible_pairs(java_solutions, python_solutions):
-    result = []
-    for java_solution in java_solutions:
-        for python_solution in python_solutions:
-            result.append({
-                "java_code": java_solution,
-                "python_code": python_solution
-            })
+def get_all_possible_pairs(eid, java_solutions, python_solutions):
+    if len(java_solutions) == 1 and len(python_solutions) == 1:
+        result = [{
+            "id": eid,
+            "java_code": java_solutions[0],
+            "python_code": python_solutions[0]
+        }]
+    else:
+        result = []
+        for i, java_solution in enumerate(java_solutions):
+            for j, python_solution in enumerate(python_solutions):
+                result.append({
+                    "id": "{}_js{}_ps{}".format(eid, i, j),
+                    "java_code": java_solution,
+                    "python_code": python_solution
+                })
 
     return result
 
@@ -71,17 +79,20 @@ def get_all_possible_pairs(java_solutions, python_solutions):
 def prepare(args):
     def single_prepare(split, k):
         file_prefix = '{}.java-python'.format(split)
+        id_file = os.path.join(args.out_dir, '{}.id'.format(file_prefix))
         java_file = os.path.join(args.out_dir, '{}.java'.format(file_prefix))
         python_file = os.path.join(args.out_dir, '{}.python'.format(file_prefix))
 
-        with open(java_file, 'w', encoding='utf8') as java_writer, \
+        with open(id_file, 'w', encoding='utf8') as id_writer, \
+                open(java_file, 'w', encoding='utf8') as java_writer, \
                 open(python_file, 'w', encoding='utf8') as python_writer, \
                 open(os.path.join(args.src_dir, '{}.jsonl'.format(split))) as f:
             for line in f:
                 ex = json.loads(line.strip())
                 java_solutions = ex['java'][:k]
                 python_solutions = ex['python'][:k]
-                pairs = get_all_possible_pairs(java_solutions, python_solutions)
+                pairs = get_all_possible_pairs(ex['id'], java_solutions, python_solutions)
+                id_writer.write('\n'.join([p["id"] for p in pairs]) + '\n')
                 java_writer.write('\n'.join([p["java_code"] for p in pairs]) + '\n')
                 python_writer.write('\n'.join([p["python_code"] for p in pairs]) + '\n')
 

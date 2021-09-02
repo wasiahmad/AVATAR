@@ -87,7 +87,7 @@ python $evaluator_script/evaluator.py \
     --references $GOUND_TRUTH_PATH \
     --predictions $SAVE_DIR/test.output \
     --language $TARGET \
-    2>&1 | tee -a $RESULT_FILE;
+    2>&1 | tee $RESULT_FILE;
 
 cd $codebleu_path;
 python calc_code_bleu.py \
@@ -108,7 +108,7 @@ python $evaluator_script/compile.py \
 function predict_transcoder_eval () {
 
 MODEL_PATH=${SAVE_DIR}/checkpoint-best-ppl/pytorch_model.bin;
-DATA_DIR=${CODE_DIR_HOME}/evaluation/TransCoder;
+DATA_DIR=${CODE_DIR_HOME}/data/transcoder_test_gfg;
 OUT_DIR=${SAVE_DIR}/transcoder_eval;
 mkdir -p $OUT_DIR;
 RESULT_FILE=${OUT_DIR}/result.txt;
@@ -136,7 +136,7 @@ python $evaluator_script/evaluator.py \
     --txt_ref \
     --predictions $OUT_DIR/test.output \
     --language $TARGET \
-    2>&1 | tee -a $RESULT_FILE;
+    2>&1 | tee $RESULT_FILE;
 
 cd $codebleu_path;
 python calc_code_bleu.py \

@@ -90,7 +90,7 @@ python $evaluator_script/evaluator.py \
     --references $GOUND_TRUTH_PATH \
     --predictions $SAVE_DIR/test.output \
     --language $TARGET \
-    2>&1 | tee -a $RESULT_FILE;
+    2>&1 | tee $RESULT_FILE;
 
 cd $codebleu_path;
 python calc_code_bleu.py \

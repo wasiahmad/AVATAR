@@ -6,7 +6,7 @@ In order to evaluate computation accuracies of CodeBERT, GraphCodeBERT, and PLBA
 **AVATAR-g4g-functions** dataset and perform the evaluation on the `GeeksforGeeks` dataset proposed in 
 [Lachaux et al., 2020](https://arxiv.org/pdf/2006.03511.pdf). Note that, all the evaluation results reported here are 
 based on the test split of the `GeeksforGeeks` dataset proposed in [Lachaux et al., 2020] which is included in this 
-repository (at `./TransCoder/[test|valid].java-python.[id|java|python]`).
+[folder](https://github.com/wasiahmad/AVATAR/tree/main/data/transcoder_test_gfg).
 
 **What is AVATAR-g4g-functions?** AVATAR is a parallel corpus of programs. We use the programs collected from 
 GeeksforGeeks and extract the standalone functions from them and create a parallel corpus of Java-Python functions.
@@ -15,8 +15,6 @@ GeeksforGeeks and extract the standalone functions from them and create a parall
 ### Example
 
 ```
-cd  TransCoder;
-
 # codebert
 bash run.sh java python codebert;
 bash run.sh python java codebert;
@@ -76,6 +74,8 @@ bash run.sh python java plbart-multilingual;
 
 ### Evaluation Results
 
+- We set the `beam_size` to 5 while decoding with all the models.
+
 <table>
     <thead>
         <tr>
@@ -115,7 +115,7 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">6</td>
         </tr>
         <tr>
-            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TransCoder-DOBF</a></td>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF</a></td>
             <td align ="center">464</td>
             <td align ="center">150</td>
             <td align ="center">101</td>
@@ -127,6 +127,21 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">83</td>
             <td align ="center">185</td>
             <td align ="center">1</td>
+            <td align ="center">3</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF-ft</a></td>
+            <td align ="center">464</td>
+            <td align ="center">49</td>
+            <td align ="center">65</td>
+            <td align ="center">346</td>
+            <td align ="center">120</td>
+            <td align ="center">4</td>
+            <td align ="center">482</td>
+            <td align ="center">100</td>
+            <td align ="center">49</td>
+            <td align ="center">330</td>
+            <td align ="center">112</td>
             <td align ="center">3</td>
         </tr>
         <tr>
@@ -219,11 +234,18 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">7.9%</td>
         </tr>
         <tr>
-            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TransCoder-DOBF</a></td>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF</a></td>
             <td align ="center">0.0%</td>
             <td align ="center">32.3%</td>
             <td align ="center">36.9%</td>
             <td align ="center">6.8%</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF-ft</a></td>
+            <td align ="center">0.0%</td>
+            <td align ="center">10.6%</td>
+            <td align ="center">18.5%</td>
+            <td align ="center">1.9%</td>
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
@@ -298,7 +320,7 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">62.1</td>
         </tr>
         <tr>
-            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TransCoder-DOBF</a></td>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF</a></td>
             <td align ="center">44.2%</td>
             <td align ="center">67.3</td>
             <td align ="center">0.7</td>
@@ -311,6 +333,21 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">61.4</td>
             <td align ="center">60.1</td>
             <td align ="center">63.9</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF-ft</a></td>
+            <td align ="center">74.6%</td>
+            <td align ="center">83.3</td>
+            <td align ="center"><b>19.9</b></td>
+            <td align ="center">71.3</td>
+            <td align ="center">71.8</td>
+            <td align ="center">78.2</td>
+            <td align ="center"><b>68.5%</b></td>
+            <td align ="center"><b>84.6</b></td>
+            <td align ="center"><b>19.2</b></td>
+            <td align ="center"><b>82.1</b></td>
+            <td align ="center"><b>75.6</b></td>
+            <td align ="center"><b>81.7</b></td>
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
@@ -346,16 +383,16 @@ bash run.sh python java plbart-multilingual;
             <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>mono</sub></a></td>
             <td align ="center"><b>76.3%</b></td>
             <td align ="center"><b>84.1</b></td>
-            <td align ="center"><b>16.5</b></td>
+            <td align ="center">16.5</td>
             <td align ="center"><b>72.1</b></td>
             <td align ="center"><b>72.4</b></td>
             <td align ="center"><b>78.9</b></td>
             <td align ="center"><b>65.8%</b></td>
-            <td align ="center"><b>82.9</b></td>
-            <td align ="center"><b>14.5</b></td>
-            <td align ="center"><b>81.2</b></td>
-            <td align ="center"><b>73.2</b></td>
-            <td align ="center"><b>80.1</b></td>
+            <td align ="center">82.9</td>
+            <td align ="center">14.5</td>
+            <td align ="center">81.2</td>
+            <td align ="center">73.2</td>
+            <td align ="center">80.1</td>
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a></td>

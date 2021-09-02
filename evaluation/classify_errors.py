@@ -22,6 +22,7 @@ JAVA_ERROR_CLASSES = {
         ('string', 'cannot be applied to given types'),
         ('regexp', 'error: .* required, but .* found'),
         ('string', 'error: char cannot be dereferenced'),
+        ('string', 'error: int cannot be dereferenced'),
         ('string', 'error: boolean cannot be dereferenced'),
         ('regexp', 'error: .* type not allowed'),
     ]),
@@ -95,28 +96,33 @@ def is_match_list(list_of_err_txt, text):
     return False
 
 
-def classify_python_errors(filename):
+def classify_python_errors(args):
     error_counts = {k: 0 for k in PYTHON_ERROR_CLASSES}
     total_errors = 0
-    with open(filename, encoding='utf8') as f:
+    with open(args.logfile, encoding='utf8') as f:
         for line in f:
             msg = line.strip()[2:-2]
             if msg.startswith('error : '):
                 total_errors += 1
+                matched = False
                 for err in PYTHON_ERROR_CLASSES:
                     if err in msg:
                         error_counts[err] += 1
+                        matched = True
                         break
+
+                if not matched and args.verbose:
+                    print(msg)
 
     error_counts['other'] = total_errors - sum(error_counts.values())
     error_counts['total'] = total_errors
     print(json.dumps(error_counts, indent=4, sort_keys=True))
 
 
-def classify_java_errors(filename):
+def classify_java_errors(args):
     error_counts = {k: 0 for k in JAVA_ERROR_CLASSES.keys()}
     total_errors = 0
-    with open(filename, encoding='utf8') as f:
+    with open(args.logfile, encoding='utf8') as f:
         for line in f:
             msg = line.strip()[2:-2]
             if msg.startswith('error : '):
@@ -130,7 +136,7 @@ def classify_java_errors(filename):
                         matched = True
                         break
 
-                if not matched:
+                if not matched and args.verbose:
                     print(msg)
 
     error_counts['other'] = total_errors - sum(error_counts.values())
@@ -148,8 +154,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate leaderboard predictions for BigCloneBench dataset.')
     parser.add_argument('--logfile', required=True, type=str, help="log filepath.")
     parser.add_argument('--lang', required=True, type=str, help='language name', choices=['java', 'python'])
+    parser.add_argument('--verbose', action='store_true', help='enable logging')
     args = parser.parse_args()
     if args.lang == 'java':
-        classify_java_errors(args.logfile)
+        classify_java_errors(args)
     else:
-        classify_python_errors(args.logfile)
+        classify_python_errors(args)

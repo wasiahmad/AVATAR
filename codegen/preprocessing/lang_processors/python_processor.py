@@ -4,13 +4,18 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
+from codegen.preprocessing.lang_processors.tokenization_utils import (
+    process_string,
+)
+from codegen.preprocessing.lang_processors.lang_processor import LangProcessor
+from codegen.preprocessing.obfuscation.bobskater_obfuscator import (
+    obfuscateString,
+)
+from codegen.preprocessing.obfuscation.utils_deobfuscation import dico_to_string
 
-
-import re
 import tokenize
 from io import BytesIO
-from lang_processors.tokenization_utils import process_string
-from lang_processors.lang_processor import LangProcessor
+import re
 
 
 class PythonProcessor(LangProcessor):
@@ -185,6 +190,10 @@ class PythonProcessor(LangProcessor):
             )
         untok_s = untok_s.replace("> >", ">>").replace("< <", "<<")
         return untok_s
+
+    def obfuscate_code(self, code):
+        res, dico = obfuscateString(code, obfuscateNames=True, removeDocstrings=False)
+        return res, dico_to_string(dico)
 
     def extract_functions(self, tokenized_code: str):
         """Extract functions from tokenized python code"""

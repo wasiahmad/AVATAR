@@ -21,7 +21,7 @@ import fastBPE
 import argparse
 
 from tqdm import tqdm
-from transcoder.XLM.data.dictionary import (
+from codegen.model.src.data.dictionary import (
     Dictionary,
     BOS_WORD,
     EOS_WORD,
@@ -29,9 +29,10 @@ from transcoder.XLM.data.dictionary import (
     UNK_WORD,
     MASK_WORD
 )
-from transformers import RobertaTokenizer
-from transcoder.XLM.model import build_model
-from transcoder.XLM.utils import (
+from codegen.preprocessing.bpe_modes.fast_bpe_mode import FastBPEMode
+from codegen.preprocessing.bpe_modes.roberta_bpe_mode import RobertaBPEMode
+from codegen.model.src.model import build_model
+from codegen.model.src.utils import (
     restore_roberta_segmentation_sentence,
     AttrDict
 )
@@ -47,30 +48,39 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Translate sentences")
 
     # model
-    parser.add_argument("--model_path", type=str,
-                        default="", help="Model path")
-    parser.add_argument("--src_lang", type=str, default="",
-                        help=f"Source language, should be either {', '.join(SUPPORTED_LANGUAGES[:-1])} or {SUPPORTED_LANGUAGES[-1]}")
-    parser.add_argument("--tgt_lang", type=str, default="",
-                        help=f"Target language, should be either {', '.join(SUPPORTED_LANGUAGES[:-1])} or {SUPPORTED_LANGUAGES[-1]}")
-    parser.add_argument("--BPE_path", type=str,
-                        default="data/BPE_with_comments_codes", help="Path to BPE codes.")
-    parser.add_argument("--beam_size", type=int, default=1,
-                        help="Beam size. The beams will be printed in order of decreasing likelihood.")
+    parser.add_argument("--model_path", type=str, default="", help="Model path")
+    parser.add_argument(
+        "--src_lang",
+        type=str,
+        default="",
+        help=f"Source language, should be either {', '.join(SUPPORTED_LANGUAGES[:-1])} or {SUPPORTED_LANGUAGES[-1]}",
+    )
+    parser.add_argument(
+        "--tgt_lang",
+        type=str,
+        default="",
+        help=f"Target language, should be either {', '.join(SUPPORTED_LANGUAGES[:-1])} or {SUPPORTED_LANGUAGES[-1]}",
+    )
+    parser.add_argument(
+        "--BPE_path",
+        type=str,
+        default="../codegen/bpe/cpp-java-python/codes",
+        help="Path to BPE codes.",
+    )
+    parser.add_argument(
+        "--beam_size",
+        type=int,
+        default=1,
+        help="Beam size. The beams will be printed in order of decreasing likelihood.",
+    )
+
     parser.add_argument("--input_file", type=str,
                         default="", help="Input file path")
     parser.add_argument("--output_file", type=str,
                         default="", help="Output file path")
-    parser.add_argument("--batch_size", type=int, default=8, help="Batch size.")
+    parser.add_argument("--batch_size", type=int, default=1, help="Batch size.")
 
     return parser
-
-
-def apply_bpe(tokenizer, code):
-    lines = code.split("\n")
-    return "\n".join(
-        [" ".join(tokenizer._tokenize(line.strip())) for line in lines]
-    )
 
 
 class Translator:
@@ -105,9 +115,11 @@ class Translator:
 
         # reload bpe
         if getattr(self.reloaded_params, "roberta_mode", False):
-            self.bpe_model = RobertaTokenizer.from_pretrained("roberta-base")
+            self.bpe_model = RobertaBPEMode()
         else:
-            self.bpe_model = fastBPE.fastBPE(os.path.abspath(params.BPE_path))
+            self.bpe_model = FastBPEMode(
+                codes=os.path.abspath(params.BPE_path), vocab_path=None
+            )
 
     def translate(
             self,
@@ -122,8 +134,9 @@ class Translator:
         assert lang1 in {'python', 'java', 'cpp'}, lang1
         assert lang2 in {'python', 'java', 'cpp'}, lang2
 
-        lang1 += '_sa'
-        lang2 += '_sa'
+        if (lang1 + '_sa') in self.reloaded_params.lang2id:
+            lang1 += '_sa'
+            lang2 += '_sa'
 
         with torch.no_grad():
             lang1_id = self.reloaded_params.lang2id[lang1]
@@ -132,11 +145,10 @@ class Translator:
             input_lengths = []
             input_ids = []
             for input in batch_input:
-                tokens = [t for t in input.split()]
-                if getattr(self.reloaded_params, "roberta_mode", False):
-                    tokens = apply_bpe(self.bpe_model, " ".join(tokens)).split()
-                else:
-                    tokens = self.bpe_model.apply(tokens)
+                tokens = input.split()
+                # print(f"Tokenized {params.src_lang} function:")
+                # print(tokens)
+                tokens = self.bpe_model.apply_bpe(" ".join(tokens)).split()
                 tokens = ['</s>'] + tokens + ['</s>']
                 input_ids.append([self.dico.index(w) for w in tokens])
                 input_lengths.append(len(tokens))
@@ -145,7 +157,7 @@ class Translator:
             for i in range(len(batch_input)):
                 num_pad_tokens = max_length - input_lengths[i]
                 if num_pad_tokens > 0:
-                    input_ids[i].extend([self.dico.index(PAD_WORD)] * num_pad_tokens)
+                    input_ids[i].extend([self.reloaded_params.pad_index] * num_pad_tokens)
 
             len1 = torch.tensor(input_lengths, dtype=torch.long).to(device)
             x1 = torch.tensor(input_ids, dtype=torch.long).to(device)
@@ -174,6 +186,7 @@ class Translator:
                     ),
                     sample_temperature=sample_temperature
                 )
+                x2 = x2.unsqueeze(1)  # seq-len, 1, bsz
             else:
                 x2, len2, _ = self.decoder.generate_beam(
                     enc1,
@@ -190,7 +203,7 @@ class Translator:
             batch_result = []
             # x2 = seq-len, beam-size, bsz
             x2 = x2.permute(2, 0, 1).cpu().numpy()
-            # now x2 = bsz, seq-len, beam-size
+            # x2 = bsz, seq-len, beam-size
             for idx in range(x2.shape[0]):
                 beam_outputs = []
                 for i in range(x2.shape[2]):

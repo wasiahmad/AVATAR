@@ -5,8 +5,8 @@ sys.path.append("..")
 
 import argparse
 from tqdm import tqdm
-from lang_processors.java_processor import JavaProcessor
-from lang_processors.python_processor import PythonProcessor
+from codegen.preprocessing.lang_processors.java_processor import JavaProcessor
+from codegen.preprocessing.lang_processors.python_processor import PythonProcessor
 from subprocess import run, check_output, CalledProcessError, STDOUT, PIPE
 
 root_folder = "../third_party"

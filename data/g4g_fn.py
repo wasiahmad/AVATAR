@@ -14,12 +14,12 @@ class Namespace:
 
 def main():
     ignore_java_functions = []
-    with open('../evaluation/TransCoder/test.java-python.java', encoding='utf8') as f:
+    with open('transcoder_test_gfg/test.java-python.java', encoding='utf8') as f:
         for line in f:
             ignore_java_functions.append(line.strip())
 
     ignore_python_functions = []
-    with open('../evaluation/TransCoder/test.java-python.python', encoding='utf8') as f:
+    with open('transcoder_test_gfg/test.java-python.python', encoding='utf8') as f:
         for line in f:
             ignore_python_functions.append(line.strip())
 

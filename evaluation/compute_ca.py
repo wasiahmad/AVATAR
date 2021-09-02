@@ -4,7 +4,11 @@ import json
 import logging
 import argparse
 
-from transcoder.XLM.utils import eval_function_output, bool_flag
+from codegen.model.src.utils import (
+    bool_flag,
+    eval_function_output,
+    vizualize_translated_files
+)
 
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -14,8 +18,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 EVAL_SCRIPT_FOLDER = {
-    "test": "g4g_successful_test_scripts",
-    "valid": "g4g_successful_test_scripts"
+    "test": "../data/transcoder_evaluation_gfg",
+    "valid": "../data/transcoder_evaluation_gfg"
 }
 
 
@@ -51,7 +55,8 @@ def main(params):
         params.target_lang,
         params.outfolder,
         EVAL_SCRIPT_FOLDER[params.split],
-        params.retry_mismatching_types
+        params.retry_mismatching_types,
+        roberta_mode=False
     )
     log_string = "%s_%s-%s" % (params.split, params.source_lang, params.target_lang)
     logger.info("Computation res %s : %s" % (log_string, json.dumps(func_run_stats)))
@@ -62,9 +67,44 @@ def main(params):
     with open(filepath, 'w', encoding='utf8') as fw:
         fw.write('\n'.join([str(item) for item in func_run_out]))
 
+    out_paths = []
+    success_for_beam_number = [0 for i in range(len(params.hyp_paths))]
+    for beam_number in range(len(success_for_beam_number)):
+        out_name = "hyp.{0}-{1}.{2}_beam{3}.out.txt".format(
+            params.source_lang,
+            params.target_lang,
+            params.split,
+            beam_number
+        )
+        hyp_file_dir = os.path.dirname(params.hyp_paths[beam_number])
+        out_path = os.path.join(hyp_file_dir, out_name)
+        out_paths.append(out_path)
+        with open(out_path, "w", encoding="utf-8") as f:
+            for results_list in func_run_out:
+                result_for_beam = (
+                    results_list[beam_number]
+                    if beam_number < len(results_list)
+                    else ""
+                )
+                if result_for_beam.startswith("success"):
+                    success_for_beam_number[beam_number] += 1
+                f.write((result_for_beam) + "\n")
+            f.write("\n")
+
+    vizualize_translated_files(
+        params.source_lang,
+        params.target_lang,
+        params.src_path,
+        params.hyp_paths,
+        params.id_path,
+        params.ref_path,
+        out_file=out_paths,
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--src_path", type=str, required=True, help="Path to sources")
     parser.add_argument("--ref_path", type=str, required=True, help="Path to references")
     parser.add_argument("--id_path", type=str, required=True, help="Path to identities")
     parser.add_argument("--hyp_paths", nargs='+', type=str, required=True, help="Path to hypotheses")

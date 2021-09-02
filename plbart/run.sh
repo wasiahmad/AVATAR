@@ -109,7 +109,7 @@ python $evaluator_script/evaluator.py \
     --references $GOUND_TRUTH_PATH \
     --predictions $FILE_PREF.hyp \
     --language $TARGET \
-    2>&1 | tee -a $RESULT_FILE;
+    2>&1 | tee $RESULT_FILE;
 
 cd $codebleu_path;
 python calc_code_bleu.py \
@@ -130,7 +130,7 @@ python $evaluator_script/compile.py \
 function predict_transcoder_eval () {
 
 MODEL_PATH=${SAVE_DIR}/checkpoint_best.pt;
-DATA_DIR=${CODE_DIR_HOME}/evaluation/TransCoder
+DATA_DIR=${CODE_DIR_HOME}/data/transcoder_test_gfg;
 OUT_DIR=${SAVE_DIR}/transcoder_eval;
 mkdir -p $OUT_DIR
 FILE_PREF=${OUT_DIR}/test;
@@ -158,7 +158,7 @@ python $evaluator_script/evaluator.py \
     --txt_ref \
     --predictions $FILE_PREF.output \
     --language $TARGET \
-    2>&1 | tee -a $RESULT_FILE;
+    2>&1 | tee $RESULT_FILE;
 
 cd $codebleu_path;
 python calc_code_bleu.py \

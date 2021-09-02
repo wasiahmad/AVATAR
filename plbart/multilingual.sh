@@ -99,9 +99,9 @@ FILE_PREF=${RESULT_DIR}/output;
 RESULT_FILE=${RESULT_DIR}/result.txt;
 GOUND_TRUTH_PATH=${path_2_data}/test.jsonl;
 
-echo "==========================================================================" | tee ${RESULT_FILE};
-echo "Source: "${SOURCE_LANG}"                            Target: "${TARGET_LANG} | tee -a ${RESULT_FILE};
-echo "--------------------------------------------------------------------------" | tee -a ${RESULT_FILE};
+echo "==========================================================================" | tee $RESULT_FILE;
+echo "Source: "${SOURCE_LANG}"                            Target: "${TARGET_LANG} | tee -a $RESULT_FILE;
+echo "--------------------------------------------------------------------------" | tee -a $RESULT_FILE;
 
 fairseq-generate ${path_2_data}/plbart-bin \
     --path $MODEL_PATH \
@@ -149,7 +149,7 @@ function predict_transcoder_eval () {
 SOURCE_LANG=$1;
 TARGET_LANG=$2;
 MODEL_PATH=${SAVE_DIR}/checkpoint_best.pt;
-DATA_DIR=${CODE_DIR_HOME}/evaluation/TransCoder
+DATA_DIR=${CODE_DIR_HOME}/data/transcoder_test_gfg;
 
 RESULT_DIR=${SAVE_DIR}/${SOURCE_LANG}2${TARGET_LANG}/transcoder_eval;
 mkdir -p $RESULT_DIR;
@@ -181,7 +181,7 @@ python $evaluator_script/evaluator.py \
     --txt_ref \
     --predictions $FILE_PREF.output \
     --language $TARGET_LANG \
-    2>&1 | tee -a $RESULT_FILE;
+    2>&1 | tee $RESULT_FILE;
 
 cd $codebleu_path;
 python calc_code_bleu.py \

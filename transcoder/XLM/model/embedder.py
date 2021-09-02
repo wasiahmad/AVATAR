@@ -9,15 +9,9 @@ from logging import getLogger
 import torch
 
 from .transformer import TransformerModel
-from ..data.dictionary import (
-    Dictionary,
-    BOS_WORD,
-    EOS_WORD,
-    PAD_WORD,
-    UNK_WORD,
-    MASK_WORD,
-)
+from ..data.dictionary import Dictionary, BOS_WORD, EOS_WORD, PAD_WORD, UNK_WORD, MASK_WORD
 from ..utils import AttrDict
+
 
 logger = getLogger()
 
@@ -35,7 +29,7 @@ class SentenceEmbedder(object):
 
         # handle models from multi-GPU checkpoints
         if 'checkpoint' in path:
-            state_dict = {(k[7:] if k.startswith('module.') else k): v for k, v in state_dict.items()}
+            state_dict = {(k[7:] if k.startswith('module.') else k)                          : v for k, v in state_dict.items()}
 
         # reload dictionary and model parameters
         dico = Dictionary(
@@ -64,7 +58,7 @@ class SentenceEmbedder(object):
         Returns sequence-wise or single-vector sentence representations.
         """
         self.pretrain_params = {k: v for k,
-                                         v in pretrain_params.__dict__.items()}
+                                v in pretrain_params.__dict__.items()}
         self.model = model
         self.dico = dico
         self.n_layers = model.n_layers
