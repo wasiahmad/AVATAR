@@ -68,7 +68,7 @@ def main(params):
         fw.write('\n'.join([str(item) for item in func_run_out]))
 
     out_paths = []
-    success_for_beam_number = [0 for i in range(len(params.hyp_paths))]
+    success_for_beam_number = [0 for _ in range(len(params.hyp_paths))]
     for beam_number in range(len(success_for_beam_number)):
         out_name = "hyp.{0}-{1}.{2}_beam{3}.out.txt".format(
             params.source_lang,

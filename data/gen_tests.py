@@ -29,12 +29,24 @@ allowed_return_types = [
 ]
 
 NUM_TEST_CASES = 10
-# we do not chose negative integers as parameters
+# we do not chose <=0 integers as parameters
 # because often they indicate lengths/sizes
-MIN_INT = 0
+MIN_INT = 1
 MAX_INT = 200
 MAX_ARRAY_ARG_SIZE = 50
 INDENT = ' ' * 4
+
+
+def get_prefix(lang):
+    cmt_tag = "//" if lang == 'java' else "#"
+    PREFIX = ""
+    PREFIX += cmt_tag + " Copyright (c) 2021 Wasi Ahmad.\n"
+    PREFIX += cmt_tag + " All rights reserved.\n"
+    PREFIX += cmt_tag + "\n"
+    PREFIX += cmt_tag + " This source code is licensed under the license found in the\n"
+    PREFIX += cmt_tag + " LICENSE file in the root directory of this source tree.\n"
+    PREFIX += cmt_tag + "\n\n"
+    return PREFIX
 
 
 def get_return_type(code):
@@ -110,10 +122,11 @@ def generate_param_specific_body_python(arg_types, tc_string, is_ret_type_float)
 
 def generate_python_program(fn_name, fn, types, tc_string, is_ret_type_float):
     fn = fn.replace(fn_name, 'f_gold')
-    program = ''
+    program = get_prefix('python')
     program += fn
-    program += '\n\n\n'
-    program += '#TOFILL\n\n'
+    program += '\n\n'
+    program += '#TOFILL\n'
+    program += '\n\n'
 
     program += 'if __name__ == "__main__":\n'
     program += generate_param_specific_body_python(types, tc_string, is_ret_type_float)
@@ -158,15 +171,17 @@ def generate_param_specific_body_java(arg_types, tc_string, is_ret_type_float):
 
 def generate_java_program(fn_name, fn, types, tc_string, is_ret_type_float):
     fn = fn.replace(fn_name, 'f_gold')
-    program = 'import java.util.*;\n' \
-              'import java.util.stream.*;\n' \
-              'import java.lang.*;\n' \
-              'import javafx.util.Pair;\n'
+    program = get_prefix('java')
+    program += 'import java.util.*;\n' \
+               'import java.util.stream.*;\n' \
+               'import java.lang.*;\n' \
+               'import javafx.util.Pair;\n'
     program += '\n'
     program += 'public class {}'.format(fn_name) + '{ \n\n'
     program += fn
-    program += '\n\n\n'
-    program += '//TOFILL\n\n'
+    program += '\n\n'
+    program += '//TOFILL\n'
+    program += '\n\n'
     program += 'public static void main(String args[]) {\n'
     program += generate_param_specific_body_java(types, tc_string, is_ret_type_float)
     program += '}\n'

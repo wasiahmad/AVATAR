@@ -1,6 +1,15 @@
 import re
+import sys
 import json
+import logging
 import argparse
+
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
+    datefmt='%m/%d/%Y %H:%M:%S',
+    level=logging.INFO, stream=sys.stdout
+)
+logger = logging.getLogger(__name__)
 
 PYTHON_ERROR_CLASSES = [
     'SyntaxError',
@@ -11,7 +20,9 @@ PYTHON_ERROR_CLASSES = [
     'ZeroDivisionError',
     'IndexError',
     'RecursionError',
-    'KeyError'
+    'KeyError',
+    'ValueError',
+    'OverflowError'
 ]
 
 JAVA_ERROR_CLASSES = {
@@ -112,7 +123,7 @@ def classify_python_errors(args):
                         break
 
                 if not matched and args.verbose:
-                    print(msg)
+                    logger.info(msg)
 
     error_counts['other'] = total_errors - sum(error_counts.values())
     error_counts['total'] = total_errors
@@ -137,7 +148,7 @@ def classify_java_errors(args):
                         break
 
                 if not matched and args.verbose:
-                    print(msg)
+                    logger.info(msg)
 
     error_counts['other'] = total_errors - sum(error_counts.values())
     error_counts['total'] = total_errors

@@ -17,11 +17,10 @@
 
 import os
 import torch
-import random
-import logging
 import argparse
 
 from tqdm import tqdm
+from logging import getLogger
 from codegen.model.src.data.dictionary import (
     Dictionary,
     BOS_WORD,
@@ -39,22 +38,7 @@ from transcoder.XLM.model import build_model
 
 SUPPORTED_LANGUAGES = ['cpp', 'java', 'python']
 
-
-def init_logger(log_file=None):
-    log_format = logging.Formatter("[%(asctime)s %(levelname)s] %(message)s")
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-
-    if log_file and log_file != '':
-        file_handler = logging.FileHandler(log_file, encoding='utf8')
-        file_handler.setFormatter(log_format)
-        logger.addHandler(file_handler)
-
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(log_format)
-    logger.addHandler(console_handler)
-
-    return logger
+logger = getLogger()
 
 
 def get_parser():
@@ -140,7 +124,6 @@ class Translator:
             beam_size=1,
             sample_temperature=None,
             device='cuda:0',
-            logger=None,
             show_example=False,
     ):
         assert lang1 in {'python', 'java', 'cpp'}, lang1
@@ -251,17 +234,6 @@ if __name__ == '__main__':
         if input_lines:
             inputs_in_batches.append(input_lines)
 
-    logger = None
-    if params.show_example:
-        chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-        while True:
-            log_file = "{}.log".format(
-                "".join(random.choice(chars) for _ in range(10))
-            )
-            if not os.path.exists(log_file):
-                break
-        logger = init_logger(log_file)
-
     with open(params.output_file, 'w', encoding='utf8') as fw:
         for batch_input in tqdm(inputs_in_batches, total=len(inputs_in_batches)):
             with torch.no_grad():
@@ -270,8 +242,7 @@ if __name__ == '__main__':
                     lang1=params.src_lang,
                     lang2=params.tgt_lang,
                     beam_size=params.beam_size,
-                    logger=logger,
-                    show_example=False
+                    show_example=params.show_example,
                 )
                 for single_out in output:
                     assert len(single_out) == params.beam_size
