@@ -75,6 +75,7 @@ We studied 8 models for program translation.
 - [PLBART](https://arxiv.org/abs/2103.06333)
 - [CodeT5](https://arxiv.org/abs/2109.00859)
 - [TransCoder](https://papers.nips.cc/paper/2020/hash/ed23fbf18c2cd35f8c7f8de44f85c08d-Abstract.html) (unsupervised approach)
+- [TC-DOBF](https://arxiv.org/abs/2102.07492) (unsupervised approach)
 
 
 ## Training & Evaluation
@@ -230,7 +231,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">0.1</td>
       </tr>
       <tr>
-          <td rowspan=6>Pre-trained</td>
+          <td rowspan=9>Pre-trained</td>
           <td><a href="https://arxiv.org/pdf/2102.04664.pdf" target="_blank">CodeGPT</a></td>
           <td align ="center">47.3</td>
           <td align ="center">38.2</td>

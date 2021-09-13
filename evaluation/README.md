@@ -328,13 +328,13 @@ bash run.sh python java plbart-multilingual;
     <tbody>
         <tr>
             <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
-            <td align ="center">49.6%</td>
+            <td align ="center">49.6</td>
             <td align ="center">72.4</td>
             <td align ="center">2.0</td>
             <td align ="center">58.6</td>
             <td align ="center">66.1</td>
             <td align ="center">68.7</td>
-            <td align ="center">35.1%</td>
+            <td align ="center">35.1</td>
             <td align ="center">65.3</td>
             <td align ="center">0.4</td>
             <td align ="center">72.7</td>
@@ -343,13 +343,13 @@ bash run.sh python java plbart-multilingual;
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF</a></td>
-            <td align ="center">52.2%</td>
+            <td align ="center">52.2</td>
             <td align ="center">72.2</td>
             <td align ="center">3.9</td>
             <td align ="center">59.0</td>
             <td align ="center">64.4</td>
             <td align ="center">68.3</td>
-            <td align ="center">44.0%</td>
+            <td align ="center">44.0</td>
             <td align ="center">67.6</td>
             <td align ="center">1.8</td>
             <td align ="center">72.8</td>
@@ -358,13 +358,13 @@ bash run.sh python java plbart-multilingual;
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF-ft</a></td>
-            <td align ="center">76.1%</td>
+            <td align ="center">76.1</td>
             <td align ="center"><b>86.5</b></td>
             <td align ="center"><b>29.9</b></td>
             <td align ="center"><b>75.7</b></td>
             <td align ="center"><b>76.5</b></td>
             <td align ="center"><b>81.9</b></td>
-            <td align ="center"><b>75.5%</b></td>
+            <td align ="center"><b>75.5</b></td>
             <td align ="center"><b>86.6</b></td>
             <td align ="center"><b>34.5</b></td>
             <td align ="center"><b>85.1</b></td>
@@ -373,13 +373,13 @@ bash run.sh python java plbart-multilingual;
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
-            <td align ="center">9.9%</td>
+            <td align ="center">9.9</td>
             <td align ="center">60.5</td>
             <td align ="center">2.7</td>
             <td align ="center">48.3</td>
             <td align ="center">52.3</td>
             <td align ="center">57.1</td>
-            <td align ="center">7.5%</td>
+            <td align ="center">7.5</td>
             <td align ="center">57.0</td>
             <td align ="center">1.3</td>
             <td align ="center">59.3</td>
@@ -388,13 +388,13 @@ bash run.sh python java plbart-multilingual;
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2009.08366.pdf" target="_blank">GraphCodeBERT</a></td>
-            <td align ="center">12.7%</td>
+            <td align ="center">12.7</td>
             <td align ="center">61.2</td>
             <td align ="center">2.3</td>
             <td align ="center">50.5</td>
             <td align ="center">52.8</td>
             <td align ="center">57.8</td>
-            <td align ="center">6.6%</td>
+            <td align ="center">6.6</td>
             <td align ="center">55.3</td>
             <td align ="center">1.2</td>
             <td align ="center">58.6</td>
@@ -403,13 +403,13 @@ bash run.sh python java plbart-multilingual;
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>mono</sub></a></td>
-            <td align ="center"><b>76.3%</b></td>
+            <td align ="center"><b>76.3</b></td>
             <td align ="center">84.1</td>
             <td align ="center">16.5</td>
             <td align ="center">72.1</td>
             <td align ="center">72.4</td>
             <td align ="center">78.9</td>
-            <td align ="center">65.8%</td>
+            <td align ="center">65.8</td>
             <td align ="center">82.9</td>
             <td align ="center">14.5</td>
             <td align ="center">81.2</td>
@@ -418,13 +418,13 @@ bash run.sh python java plbart-multilingual;
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a></td>
-            <td align ="center">17.7%</td>
+            <td align ="center">17.7</td>
             <td align ="center">60.5</td>
             <td align ="center">6.1</td>
             <td align ="center">51.2</td>
             <td align ="center">53.8</td>
             <td align ="center">58.0</td>
-            <td align ="center">13.7%</td>
+            <td align ="center">13.7</td>
             <td align ="center">59.4</td>
             <td align ="center">4.8</td>
             <td align ="center">63.1</td>
@@ -433,13 +433,13 @@ bash run.sh python java plbart-multilingual;
         </tr>
         <tr>
             <td><a href="https://arxiv.org/pdf/2109.00859.pdf" target="_blank">CodeT5-base</a></td>
-            <td align ="center">61.9%</td>
+            <td align ="center">61.9</td>
             <td align ="center">81.6</td>
             <td align ="center">10.0</td>
             <td align ="center">67.7</td>
             <td align ="center">67.4</td>
             <td align ="center">75.2</td>
-            <td align ="center">?</td>
+            <td align ="center">58.7</td>
             <td align ="center">81.9</td>
             <td align ="center">11.7</td>
             <td align ="center">79.7</td>
