@@ -6,6 +6,7 @@ CODE_DIR_HOME=`realpath ..`;
 
 GPU=${1:-0};
 DATA_SRC=${2:-avatar};
+MT_STEPS=${3:-"java-python,python-java"}
 
 if [[ $DATA_SRC == 'avatar' ]]; then
     path_2_data=${CODE_DIR_HOME}/data;
@@ -21,17 +22,23 @@ pretrained_model=${CODE_DIR_HOME}/models/transcoder;
 MODEL_PATH=${pretrained_model}/translator_transcoder_size_from_DOBF.pth;
 TRAIN_SCRIPT=${CODE_DIR_HOME}/codegen/model/train.py;
 EXP_NAME=transcoder-ft;
-rm -rf ${SAVE_DIR}/$EXP_NAME;
+EXP_ID="${MT_STEPS//,/_}";
+
+VALID_METRICS="valid_python-java_mt_bleu";
+if [[ $MT_STEPS == "java-python" ]]; then
+    VALID_METRICS="valid_java-python_mt_bleu";
+fi
+
 
 export PYTHONPATH=$CODE_DIR_HOME;
 python $TRAIN_SCRIPT \
 --exp_name $EXP_NAME \
---exp_id transcoder-mt \
+--exp_id $EXP_ID \
 --dump_path $SAVE_DIR \
 --data_path $path_2_data/transcoder-bin \
 --split_data_accross_gpu local \
 --max_len 512 \
---mt_steps 'java-python,python-java' \
+--mt_steps $MT_STEPS \
 --encoder_only False \
 --n_layers 0 \
 --n_layers_encoder 6  \
@@ -52,6 +59,6 @@ python $TRAIN_SCRIPT \
 --optimizer 'adam_inverse_sqrt,warmup_updates=200,lr=0.0001,weight_decay=0.01' \
 --eval_bleu true \
 --eval_bleu_valid_only true \
---validation_metrics 'valid_python-java_mt_bleu' \
---stopping_criterion 'valid_python-java_mt_bleu,5' \
+--validation_metrics ${VALID_METRICS} \
+--stopping_criterion "${VALID_METRICS},5" \
 2>&1 | tee ${SAVE_DIR}/finetune.log;

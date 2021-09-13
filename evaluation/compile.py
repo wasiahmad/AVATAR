@@ -87,7 +87,7 @@ def check_java(args):
         if os.path.isfile(class_filename):
             os.remove(class_filename)
 
-    print('Success - {}, Errors - {} [Total - {}]'.format(error, success, num_errors))
+    print('Success - {}, Errors - {} [Total - {}]'.format(success, error, num_errors))
 
 
 if __name__ == '__main__':

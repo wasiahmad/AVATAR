@@ -28,17 +28,18 @@ class FastBPEMode(BPEMode):
     def __init__(self, vocab_path: str, codes: str, use_vocab: bool = False):
         super().__init__(ext=".bpe", vocab_path=vocab_path, process_strings=True)
         assert vocab_path is None or codes is not None
+        self.use_vocab = use_vocab
         if codes is None or codes == "None":
             self.codes = None
             self.vocab_path = None
+            self.bpe_model = None
         else:
             self.codes = Path(codes)
             if self.vocab_path is not None:
                 self.vocab_path = Path(vocab_path)
             else:
                 self.vocab_path = None
-        self.use_vocab = use_vocab
-        self.bpe_model = fastBPE.fastBPE(str(self.codes))
+            self.bpe_model = fastBPE.fastBPE(str(self.codes))
 
     def learn_bpe_file(self, file: str, ncodes: int):
         if ncodes > 50000:
@@ -75,7 +76,8 @@ class FastBPEMode(BPEMode):
         ), f"failed to get vocab for {file}, command: {FAST} getvocab {file} > {str(self.vocab_path)}.all & head -n nvocab {str(self.vocab_path)}.all > {str(self.vocab_path)}"
 
     def apply_bpe(self, code: str):
-        # bpe_model = fastBPE.fastBPE(str(self.codes))
+        if self.bpe_model is None:
+            self.bpe_model = fastBPE.fastBPE(str(self.codes))
         assert isinstance(code, str)
         return " ".join(self.bpe_model.apply(code.split()))
 

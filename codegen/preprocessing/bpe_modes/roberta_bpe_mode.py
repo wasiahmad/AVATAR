@@ -41,7 +41,6 @@ class RobertaBPEMode(BPEMode):
         logger.warning("Roberta BPE vocab doesn't need to be trained. Use default one.")
 
     def apply_bpe(self, code: str):
-        # tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
         lines = code.split("\n")
         return "\n".join(
             [" ".join(self.tokenizer._tokenize(line.strip())) for line in lines]

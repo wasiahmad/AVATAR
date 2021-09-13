@@ -308,7 +308,8 @@ def main():
             from apex.parallel import DistributedDataParallel as DDP
         except ImportError:
             raise ImportError(
-                "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
+                "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training."
+            )
         model = DDP(model)
 
     elif args.n_gpu > 1:
@@ -331,39 +332,45 @@ def main():
         train_dataloader = DataLoader(
             train_data,
             sampler=train_sampler,
-            batch_size=args.train_batch_size // args.gradient_accumulation_steps
+            batch_size=args.train_batch_size
         )
         if args.num_train_epochs > 0:
-            num_train_optimization_steps = int(np.ceil(
-                args.num_train_epochs * len(train_examples) /
-                (args.train_batch_size // args.gradient_accumulation_steps)
-            ))
-            eval_steps = len(train_examples) // args.train_batch_size
-            pass
+            num_train_optimization_steps = len(
+                train_dataloader) // args.gradient_accumulation_steps * args.num_train_epochs
+            eval_steps = len(train_dataloader)
         else:
-            num_train_optimization_steps = args.train_steps * args.gradient_accumulation_steps
+            num_train_optimization_steps = args.train_steps
+            args.num_train_epochs = args.train_steps // (len(train_dataloader) // args.gradient_accumulation_steps) + 1
             eval_steps = args.eval_steps
-            pass
 
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ['bias', 'LayerNorm.weight']
         optimizer_grouped_parameters = [
-            {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-             'weight_decay': args.weight_decay},
-            {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
-             'weight_decay': 0.0}
+            {
+                'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+                'weight_decay': args.weight_decay
+            },
+            {
+                'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
+                'weight_decay': 0.0
+            }
         ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
         scheduler = get_linear_schedule_with_warmup(
-            optimizer, num_warmup_steps=args.warmup_steps,
+            optimizer,
+            num_warmup_steps=args.warmup_steps,
             num_training_steps=num_train_optimization_steps
         )
         # Start training
         logger.info("***** Running training *****")
         logger.info("  Num examples = %d", len(train_examples))
-        logger.info("  Batch size = %d", args.train_batch_size)
-        logger.info("  Num epoch = %d", num_train_optimization_steps * args.train_batch_size // (
-                len(train_examples) * args.gradient_accumulation_steps))
+        logger.info("  Num Epochs = %d", args.num_train_epochs)
+        logger.info("  Instantaneous batch size per GPU = %d", int(np.ceil(args.train_batch_size / args.n_gpu)))
+        logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d",
+                    args.train_batch_size * args.gradient_accumulation_steps * (
+                        torch.distributed.get_world_size() if args.local_rank != -1 else 1))
+        logger.info("  Gradient Accumulation steps = %d", args.gradient_accumulation_steps)
+        logger.info("  Total optimization steps = %d", num_train_optimization_steps)
 
         model.train()
         dev_dataset = {}
@@ -382,6 +389,7 @@ def main():
                 loss = loss.mean()  # mean() to average on multi-gpu.
             if args.gradient_accumulation_steps > 1:
                 loss = loss / args.gradient_accumulation_steps
+
             tr_loss += loss.item()
             train_loss = round(tr_loss * args.gradient_accumulation_steps / (nb_tr_steps + 1), 4)
             nb_tr_examples += source_ids.size(0)
@@ -412,9 +420,9 @@ def main():
                     all_target_mask = torch.tensor([f.target_mask for f in eval_features], dtype=torch.long)
                     eval_data = TensorDataset(all_source_ids, all_source_mask, all_target_ids, all_target_mask)
                     dev_dataset['dev_loss'] = eval_examples, eval_data
+
                 eval_sampler = SequentialSampler(eval_data)
                 eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
-
                 logger.info("\n***** Running evaluation *****")
                 logger.info("  Num examples = %d", len(eval_examples))
                 logger.info("  Batch size = %d", args.eval_batch_size)
@@ -447,10 +455,9 @@ def main():
                 last_output_dir = os.path.join(args.output_dir, 'checkpoint-last')
                 if not os.path.exists(last_output_dir):
                     os.makedirs(last_output_dir)
-                model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+                model_to_save = model.module if hasattr(model, 'module') else model
                 output_model_file = os.path.join(last_output_dir, "pytorch_model.bin")
                 torch.save(model_to_save.state_dict(), output_model_file)
-
                 if eval_loss < best_loss:
                     logger.info("  Best ppl:%s", round(np.exp(eval_loss), 5))
                     logger.info("  " + "*" * 20)

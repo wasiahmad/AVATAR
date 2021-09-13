@@ -7,6 +7,7 @@ CODE_DIR_HOME=`realpath ..`;
 GPU=${1:-0};
 EVAL_DATA=${2:-avatar};
 MODEL_NAME=${3:-'transcoder-dobf'};
+MODEL_TYPE=${4:-'multilingual'};
 
 export CUDA_VISIBLE_DEVICES=$GPU
 evaluator_script="${CODE_DIR_HOME}/evaluation";
@@ -41,8 +42,15 @@ FILE_PREF=${RESULT_DIR}/test;
 RESULT_FILE=${RESULT_DIR}/result.txt;
 
 if [[ $MODEL_NAME == 'transcoder-ft' ]]; then
-    MODEL_PATH=${CURRENT_DIR}/${EVAL_DATA}/${MODEL_NAME}/transcoder-mt;
-    MODEL_PATH=${MODEL_PATH}/best-valid_python-java_mt_bleu.pth;
+    if [[ $MODEL_TYPE == 'multilingual' ]]; then
+        EXP_ID=${SOURCE_LANG}-${TARGET_LANG}_${TARGET_LANG}-${SOURCE_LANG};
+        MODEL_FILENAME=best-valid_python-java_mt_bleu.pth;
+    else
+        EXP_ID=${SOURCE_LANG}-${TARGET_LANG};
+        MODEL_FILENAME=best-valid_${SOURCE_LANG}-${TARGET_LANG}_mt_bleu.pth;
+    fi
+    MODEL_PATH=${CURRENT_DIR}/${EVAL_DATA}/${MODEL_NAME}/${EXP_ID};
+    MODEL_PATH=${MODEL_PATH}/${MODEL_FILENAME};
 elif [[ $MODEL_NAME == 'transcoder-dobf' ]]; then
     MODEL_PATH=${pretrained_model}/translator_transcoder_size_from_DOBF.pth;
 else
@@ -83,6 +91,9 @@ python $evaluator_script/compile.py \
     --input_file $FILE_PREF.output \
     --language $TARGET_LANG \
     2>&1 | tee -a $RESULT_FILE;
+
+count=`ls -1 *.class 2>/dev/null | wc -l`;
+[[ $count != 0 ]] && rm *.class;
 
 }
 

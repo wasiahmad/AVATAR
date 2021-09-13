@@ -5,7 +5,7 @@ Computational Accuracy (CA) refers to the fraction of translated functions that 
 In order to evaluate computation accuracies of CodeBERT, GraphCodeBERT, and PLBART, we fine-tune them on 
 **AVATAR-g4g-functions** dataset and perform the evaluation on the `GeeksforGeeks` dataset proposed in 
 [Lachaux et al., 2020](https://arxiv.org/pdf/2006.03511.pdf). Note that, all the evaluation results reported here are 
-based on the test split of the `GeeksforGeeks` dataset proposed in [Lachaux et al., 2020] which is included in this 
+based on the test split of the `GeeksforGeeks` dataset proposed in Lachaux et al., 2020 which is included in this 
 [folder](https://github.com/wasiahmad/AVATAR/tree/main/data/transcoder_test_gfg).
 
 **What is AVATAR-g4g-functions?** AVATAR is a parallel corpus of programs. We use the programs collected from 
@@ -204,6 +204,21 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">36</td>
             <td align ="center">2</td>
         </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2109.00859.pdf" target="_blank">CodeT5</a></td>
+            <td align ="center">464</td>
+            <td align ="center">68</td>
+            <td align ="center">101</td>
+            <td align ="center">287</td>
+            <td align ="center">68</td>
+            <td align ="center">8</td>
+            <td align ="center">482</td>
+            <td align ="center">143</td>
+            <td align ="center">53</td>
+            <td align ="center">283</td>
+            <td align ="center">77</td>
+            <td align ="center">3</td>
+        </tr>
     </tbody>
 </table>  
 
@@ -273,6 +288,13 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">0.0%</td>
             <td align ="center">49.4%</td>
             <td align ="center">63.7%</td>
+            <td align ="center">2.9%</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2109.00859.pdf" target="_blank">CodeT5</a></td>
+            <td align ="center">0.0%</td>
+            <td align ="center">14.7%</td>
+            <td align ="center">26.6%</td>
             <td align ="center">2.9%</td>
         </tr>
     </tbody>
@@ -408,6 +430,21 @@ bash run.sh python java plbart-multilingual;
             <td align ="center">63.1</td>
             <td align ="center">41.3</td>
             <td align ="center">55.9</td>
+        </tr>
+        <tr>
+            <td><a href="https://arxiv.org/pdf/2109.00859.pdf" target="_blank">CodeT5-base</a></td>
+            <td align ="center">61.9%</td>
+            <td align ="center">81.6</td>
+            <td align ="center">10.0</td>
+            <td align ="center">67.7</td>
+            <td align ="center">67.4</td>
+            <td align ="center">75.2</td>
+            <td align ="center">?</td>
+            <td align ="center">81.9</td>
+            <td align ="center">11.7</td>
+            <td align ="center">79.7</td>
+            <td align ="center">71.9</td>
+            <td align ="center">78.9</td>
         </tr>
     </tbody>
 </table> 

@@ -77,7 +77,10 @@ python $evaluator_script/compile.py \
     --language $TARGET_LANG \
     2>&1 | tee -a $RESULT_FILE;
 
+count=`ls -1 *.class 2>/dev/null | wc -l`;
+[[ $count != 0 ]] && rm *.class;
+
 }
 
 evaluate java python;
-#evaluate python java;
+evaluate python java;

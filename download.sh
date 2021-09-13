@@ -49,3 +49,27 @@ wget ${prefix_url}/special_tokens_map.json;
 wget ${prefix_url}/tokenizer_config.json;
 wget ${prefix_url}/vocab.json;
 cd $CODE_DIR_HOME;
+
+###################################################################
+#                     Download CodeT5 checkpoints                 #
+###################################################################
+
+pretrained_model=${CODE_DIR_HOME}/models/codet5_base;
+mkdir -p $pretrained_model
+
+cd $pretrained_model;
+FILE=config.json
+if [[ ! -f $FILE ]]; then
+    fileid="1QmvxgK7sV4tTHESZWbaYUJQeIsyHywvV"
+    curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}" > /dev/null
+    curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${FILE}
+    rm ./cookie
+fi
+FILE=pytorch_model.bin
+if [[ ! -f $FILE ]]; then
+    fileid="1mh81XQzY7G9J4Z4upQ6qNh_N1Vja690J"
+    curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}" > /dev/null
+    curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${FILE}
+    rm ./cookie
+fi
+cd $CODE_DIR_HOME

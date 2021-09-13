@@ -33,6 +33,7 @@ import argparse
 import numpy as np
 from io import open
 import torch.nn as nn
+from itertools import cycle
 
 from tqdm import tqdm
 from evaluation.bleu import _bleu
@@ -447,12 +448,20 @@ def main():
         train_data = TextDataset(train_features, args)
         train_sampler = RandomSampler(train_data)
         train_dataloader = DataLoader(
-            train_data, sampler=train_sampler,
-            batch_size=args.train_batch_size // args.gradient_accumulation_steps,
+            train_data,
+            sampler=train_sampler,
+            batch_size=args.train_batch_size,
             num_workers=4
         )
 
-        num_train_optimization_steps = args.train_steps
+        if args.num_train_epochs > 0:
+            num_train_optimization_steps = len(
+                train_dataloader) // args.gradient_accumulation_steps * args.num_train_epochs
+            eval_steps = len(train_dataloader)
+        else:
+            num_train_optimization_steps = args.train_steps
+            args.num_train_epochs = args.train_steps // (len(train_dataloader) // args.gradient_accumulation_steps) + 1
+            eval_steps = args.eval_steps
 
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ['bias', 'LayerNorm.weight']
@@ -465,46 +474,56 @@ def main():
         optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
-            num_warmup_steps=len(train_dataloader) * args.num_train_epochs * 0.1,
-            num_training_steps=len(train_dataloader) * args.num_train_epochs
+            num_warmup_steps=args.warmup_steps,
+            num_training_steps=num_train_optimization_steps
         )
 
         # Start training
         logger.info("***** Running training *****")
         logger.info("  Num examples = %d", len(train_examples))
-        logger.info("  Batch size = %d", args.train_batch_size)
-        logger.info("  Num epoch = %d", args.num_train_epochs)
+        logger.info("  Num Epochs = %d", args.num_train_epochs)
+        logger.info("  Instantaneous batch size per GPU = %d", int(np.ceil(args.train_batch_size / args.n_gpu)))
+        logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d",
+                    args.train_batch_size * args.gradient_accumulation_steps * (
+                        torch.distributed.get_world_size() if args.local_rank != -1 else 1))
+        logger.info("  Gradient Accumulation steps = %d", args.gradient_accumulation_steps)
+        logger.info("  Total optimization steps = %d", num_train_optimization_steps)
 
         model.train()
         dev_dataset = {}
         nb_tr_examples, nb_tr_steps, tr_loss, global_step, best_bleu, best_loss = 0, 0, 0, 0, 0, 1e6
-        for epoch in range(args.num_train_epochs):
-            bar = tqdm(train_dataloader, total=len(train_dataloader))
-            for batch in bar:
-                batch = tuple(t.to(device) for t in batch)
-                source_ids, source_mask, position_idx, att_mask, target_ids, target_mask = batch
-                loss, _, _ = model(source_ids, source_mask, position_idx, att_mask, target_ids, target_mask)
+        bar = range(num_train_optimization_steps)
+        train_dataloader = cycle(train_dataloader)
+        eval_flag = True
+        patience_counter = 0
 
-                if args.n_gpu > 1:
-                    loss = loss.mean()  # mean() to average on multi-gpu.
-                if args.gradient_accumulation_steps > 1:
-                    loss = loss / args.gradient_accumulation_steps
+        for step_no in tqdm(bar):
+            batch = next(train_dataloader)
+            batch = tuple(t.to(device) for t in batch)
+            source_ids, source_mask, position_idx, att_mask, target_ids, target_mask = batch
+            loss, _, _ = model(source_ids, source_mask, position_idx, att_mask, target_ids, target_mask)
 
-                tr_loss += loss.item()
-                train_loss = round(tr_loss * args.gradient_accumulation_steps / (nb_tr_steps + 1), 4)
-                bar.set_description("epoch {} loss {}".format(epoch, train_loss))
-                nb_tr_examples += source_ids.size(0)
-                nb_tr_steps += 1
-                loss.backward()
+            if args.n_gpu > 1:
+                loss = loss.mean()  # mean() to average on multi-gpu.
+            if args.gradient_accumulation_steps > 1:
+                loss = loss / args.gradient_accumulation_steps
 
-                if (nb_tr_steps + 1) % args.gradient_accumulation_steps == 0:
-                    # Update parameters
-                    optimizer.step()
-                    optimizer.zero_grad()
-                    scheduler.step()
-                    global_step += 1
+            tr_loss += loss.item()
+            train_loss = round(tr_loss * args.gradient_accumulation_steps / (nb_tr_steps + 1), 4)
+            # bar.set_description("step {} loss {}".format(step_no, train_loss))
+            nb_tr_examples += source_ids.size(0)
+            nb_tr_steps += 1
+            loss.backward()
 
-            if args.do_eval and epoch in [int(args.num_train_epochs * (i + 1) // 20) for i in range(20)]:
+            if (nb_tr_steps + 1) % args.gradient_accumulation_steps == 0:
+                # Update parameters
+                optimizer.step()
+                optimizer.zero_grad()
+                scheduler.step()
+                global_step += 1
+                eval_flag = True
+
+            if args.do_eval and ((global_step + 1) % eval_steps == 0) and eval_flag:
                 # Eval model with dev dataset
                 tr_loss = 0
                 nb_tr_examples, nb_tr_steps = 0, 0
@@ -516,11 +535,11 @@ def main():
                     eval_features = convert_examples_to_features(eval_examples, tokenizer, args, stage='dev')
                     eval_data = TextDataset(eval_features, args)
                     dev_dataset['dev_loss'] = eval_examples, eval_data
+
                 eval_sampler = SequentialSampler(eval_data)
                 eval_dataloader = DataLoader(
                     eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size, num_workers=4
                 )
-
                 logger.info("\n***** Running evaluation *****")
                 logger.info("  Num examples = %d", len(eval_examples))
                 logger.info("  Batch size = %d", args.eval_batch_size)
@@ -532,10 +551,12 @@ def main():
                     batch = tuple(t.to(device) for t in batch)
                     source_ids, source_mask, position_idx, att_mask, target_ids, target_mask = batch
                     with torch.no_grad():
-                        _, loss, num = model(source_ids, source_mask, position_idx, att_mask, target_ids, target_mask)
+                        _, loss, num = model(
+                            source_ids, source_mask, position_idx, att_mask, target_ids, target_mask
+                        )
                     eval_loss += loss.sum().item()
                     tokens_num += num.sum().item()
-                # Pring loss of dev dataset
+
                 model.train()
                 eval_loss = eval_loss / tokens_num
                 result = {'eval_ppl': round(np.exp(eval_loss), 5),
@@ -549,7 +570,7 @@ def main():
                 last_output_dir = os.path.join(args.output_dir, 'checkpoint-last')
                 if not os.path.exists(last_output_dir):
                     os.makedirs(last_output_dir)
-                model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+                model_to_save = model.module if hasattr(model, 'module') else model
                 output_model_file = os.path.join(last_output_dir, "pytorch_model.bin")
                 torch.save(model_to_save.state_dict(), output_model_file)
                 if eval_loss < best_loss:

@@ -109,15 +109,23 @@ def train(args, train_dataset, model, tokenizer, fh, pool):
     args.batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)
     train_sampler = RandomSampler(train_dataset)
 
-    train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.batch_size, drop_last=True)
+    train_dataloader = DataLoader(
+        train_dataset,
+        sampler=train_sampler,
+        batch_size=args.batch_size,
+        drop_last=True
+    )
     total_examples = len(train_dataset) * (
         torch.distributed.get_world_size() if args.local_rank != -1 else 1)
     batch_size = args.batch_size * args.gradient_accumulation_steps * (
         torch.distributed.get_world_size() if args.local_rank != -1 else 1)
 
-    if args.num_train_epochs > 0:
-        t_total = total_examples // batch_size * args.num_train_epochs
-    args.max_steps = t_total
+    if args.max_steps > 0:
+        t_total = args.max_steps
+        args.num_train_epochs = args.max_steps // (len(train_dataloader) // args.gradient_accumulation_steps) + 1
+    else:
+        t_total = len(train_dataloader) // args.gradient_accumulation_steps * args.num_train_epochs
+
     model.to(args.device)
     if args.local_rank not in [-1, 0]:
         torch.distributed.barrier()
@@ -129,8 +137,11 @@ def train(args, train_dataset, model, tokenizer, fh, pool):
         {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
     ]
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps,
-                                                num_training_steps=t_total)
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=args.warmup_steps,
+        num_training_steps=t_total
+    )
     checkpoint_last = os.path.join(args.output_dir, 'checkpoint-last')
     scheduler_last = os.path.join(checkpoint_last, 'scheduler.pt')
     optimizer_last = os.path.join(checkpoint_last, 'optimizer.pt')

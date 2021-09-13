@@ -63,7 +63,7 @@ We studied 8 models for program translation.
 
 #### Models trained from scratch
 
-- [Seq2Seq+Attn.]() [1Lx512H]
+- Seq2Seq+Attn. [1Lx512H]
 - [Transformer](https://papers.nips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) [6Lx512H]
 
 #### Pre-trained models
@@ -73,6 +73,7 @@ We studied 8 models for program translation.
 - [CodeBERT](https://www.aclweb.org/anthology/2020.findings-emnlp.139/)
 - [GraphCoderBERT](https://openreview.net/pdf?id=jLoC4ez43PZ)
 - [PLBART](https://arxiv.org/abs/2103.06333)
+- [CodeT5](https://arxiv.org/abs/2109.00859)
 - [TransCoder](https://papers.nips.cc/paper/2020/hash/ed23fbf18c2cd35f8c7f8de44f85c08d-Abstract.html) (unsupervised approach)
 
 
@@ -175,7 +176,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">17.1</td>
           <td align ="center">29.1</td>
           <td align ="center">0.1</td>
-          <td align ="center"><b>100</b></td>
+          <td align ="center">0.0</td>
           <td align ="center">49.4</td>
           <td align ="center">37.6</td>
           <td align ="center">18.5</td>
@@ -187,10 +188,10 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center"><b>77.7</b></td>
           <td align ="center">43.4</td>
           <td align ="center">29.7</td>
-          <td align ="center"><b>33.9</b></td>
+          <td align ="center">33.9</td>
           <td align ="center">34.8</td>
           <td align ="center">0.0</td>
-          <td align ="center"><b>100</b></td>
+          <td align ="center">0.0</td>
           <td align ="center">46.1</td>
           <td align ="center">36.0</td>
           <td align ="center">12.6</td>
@@ -206,7 +207,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">18.4</td>
           <td align ="center">37.9</td>
           <td align ="center">1.0</td>
-          <td align ="center">71.8</td>
+          <td align ="center">28.2</td>
           <td align ="center">62.7</td>
           <td align ="center">46.6</td>
           <td align ="center">28.5</td>
@@ -221,7 +222,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">16.5</td>
           <td align ="center">29.1</td>
           <td align ="center">0.0</td>
-          <td align ="center">67.4</td>
+          <td align ="center">32.6</td>
           <td align ="center">45.6</td>
           <td align ="center">45.7</td>
           <td align ="center">26.4</td>
@@ -237,7 +238,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">11.5</td>
           <td align ="center">26.1</td>
           <td align ="center">1.1</td>
-          <td align ="center">71.2</td>
+          <td align ="center">28.8</td>
           <td align ="center">44.0</td>
           <td align ="center">38.8</td>
           <td align ="center">26.7</td>
@@ -252,7 +253,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">12.1</td>
           <td align ="center">26.2</td>
           <td align ="center">1.2</td>
-          <td align ="center">68.6</td>
+          <td align ="center">31.4</td>
           <td align ="center">42.4</td>
           <td align ="center">37.2</td>
           <td align ="center">27.2</td>
@@ -267,7 +268,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">16.2</td>
           <td align ="center">36.7</td>
           <td align ="center">0.5</td>
-          <td align ="center">74.7</td>
+          <td align ="center">25.3</td>
           <td align ="center">55.3</td>
           <td align ="center">38.4</td>
           <td align ="center">22.5</td>
@@ -282,7 +283,7 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">16.4</td>
           <td align ="center">37.1</td>
           <td align ="center">0.7</td>
-          <td align ="center">57.2</td>
+          <td align ="center">42.8</td>
           <td align ="center">60.6</td>
           <td align ="center">48.4</td>
           <td align ="center">20.6</td>
@@ -290,19 +291,34 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">0.4</td>
       </tr>
       <tr>
+          <td><a href="https://arxiv.org/pdf/2109.00859.pdf" target="_blank">CodeT5-base</a></td>
+          <td align ="center">71.5</td>
+          <td align ="center">67.0</td>
+          <td align ="center">42.1</td>
+          <td align ="center"><b>34.6</b></td>
+          <td align ="center"><b>46.7</b></td>
+          <td align ="center"><b>2.8</b></td>
+          <td align ="center">51.4</td>
+          <td align ="center">67.0</td>
+          <td align ="center">56.1</td>
+          <td align ="center">26.6</td>
+          <td align ="center">49.6</td>
+          <td align ="center"><b>1.5</b></td>
+      </tr>
+      <tr>
           <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>mono</sub></a></td>
           <td align ="center">76.4</td>
           <td align ="center"><b>67.1</b></td>
           <td align ="center"><b>42.6</b></td>
           <td align ="center">19.3</td>
-          <td align ="center"><b>43.3</b></td>
-          <td align ="center"><b>2.4</b></td>
-          <td align ="center">34.4</td>
+          <td align ="center">43.3</td>
+          <td align ="center">2.4</td>
+          <td align ="center">65.6</td>
           <td align ="center">69.1</td>
           <td align ="center"><b>57.1</b></td>
           <td align ="center">34.0</td>
           <td align ="center">51.4</td>
-          <td align ="center"><b>1.2</b></td>
+          <td align ="center">1.2</td>
       </tr>
       <tr>
           <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a></td>
@@ -312,12 +328,42 @@ We evaluate the models' performances on the test set in terms of Compilation Acc
           <td align ="center">17.6</td>
           <td align ="center">42.4</td>
           <td align ="center"><b>2.4</b></td>
-          <td align ="center">30.8</td>
-          <td align ="center"><b>69.4</b></td>
+          <td align ="center"><b>69.2</b></td>
+          <td align ="center">69.4</td>
           <td align ="center">56.6</td>
           <td align ="center"><b>34.5</b></td>
           <td align ="center"><b>51.8</b></td>
           <td align ="center">1.0</td>
+      </tr>
+      <tr>
+          <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF-ft<sub>mono</sub></a></td>
+          <td align ="center">73.5</td>
+          <td align ="center">56.8</td>
+          <td align ="center">39.8</td>
+          <td align ="center">34.3</td>
+          <td align ="center">43.7</td>
+          <td align ="center">2.1</td>
+          <td align ="center">62.4</td>
+          <td align ="center"><b>72.1</b></td>
+          <td align ="center">52.0</td>
+          <td align ="center">21.8</td>
+          <td align ="center">46.9</td>
+          <td align ="center"><b>1.5</b></td>
+      </tr>
+      <tr>
+          <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF-ft<sub>multi</sub></a></td>
+          <td align ="center">67.9</td>
+          <td align ="center">45.5</td>
+          <td align ="center">36.5</td>
+          <td align ="center">32.9</td>
+          <td align ="center">38.6</td>
+          <td align ="center">1.0</td>
+          <td align ="center">54.9</td>
+          <td align ="center">65.0</td>
+          <td align ="center">53.4</td>
+          <td align ="center">21.3</td>
+          <td align ="center">46.0</td>
+          <td align ="center">0.9</td>
       </tr>
     </tbody>
 </table>  

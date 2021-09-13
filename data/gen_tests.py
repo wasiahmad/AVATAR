@@ -51,7 +51,10 @@ def get_prefix(lang):
 
 def get_return_type(code):
     """
-    this function will only work for 1 word return types
+    This method works for the following types of Java methods only.
+    public static return_type function_name (type1 param1, ...);
+    public return_type function_name (type1 param1, ...);
+    return_type function_name (type1 param1, ...);
     :param code:
     :return:
     """
@@ -60,7 +63,18 @@ def get_return_type(code):
     ), f"function is not the right type, should be str or list : {code}"
     if isinstance(code, str):
         code = code.split()
-    return code[code.index("(") - 2]
+    if "static" in code[0: code.index("(")]:
+        end_index = code[code.index("(") - 1]
+        start_index = code[code.index("static") + 1]
+        return_type = ' '.join(code[start_index:end_index])
+    elif "public" in code[0: code.index("(")]:
+        end_index = code[code.index("(") - 1]
+        start_index = code[code.index("public") + 1]
+        return_type = ' '.join(code[start_index:end_index])
+    else:
+        end_index = code[code.index("(") - 1]
+        return_type = ' '.join(code[0:end_index])
+    return return_type
 
 
 def generate_test_case_string(arg_types):

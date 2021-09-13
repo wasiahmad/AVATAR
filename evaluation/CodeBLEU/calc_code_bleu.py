@@ -2,12 +2,15 @@
 # Licensed under the MIT license.
 
 # -*- coding:utf-8 -*-
+import os
 import json
 import argparse
-import bleu
-import weighted_ngram_match
-import syntax_match
-import dataflow_match
+from evaluation.CodeBLEU import (
+    bleu,
+    weighted_ngram_match,
+    syntax_match,
+    dataflow_match
+)
 
 
 def python_process(tokens):
@@ -64,68 +67,81 @@ def language_specific_processing(tokens, lang):
         return tokens
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--ref', type=str, required=True,
-                    help='reference file')
-parser.add_argument('--hyp', type=str, required=True,
-                    help='hypothesis file')
-parser.add_argument('--txt_ref', action='store_true', help='reference file is a txt file')
-parser.add_argument('--lang', type=str, required=True,
-                    choices=['java', 'js', 'c_sharp', 'php', 'go', 'python', 'ruby'],
-                    help='programming language')
-parser.add_argument('--params', type=str, default='0.25,0.25,0.25,0.25',
-                    help='alpha, beta and gamma')
+def get_codebleu(
+        ref,
+        hyp,
+        lang,
+        params='0.25,0.25,0.25,0.25',
+        txt_ref=False,
+        keyword_dir=None
+):
+    lang = 'javascript' if lang == 'js' else lang
+    alpha, beta, gamma, theta = [float(x) for x in params.split(',')]
 
-args = parser.parse_args()
+    # preprocess inputs
+    if txt_ref:
+        references = [[x.strip()] for x in open(ref, 'r', encoding='utf-8').readlines()]
+    else:
+        references = [json.loads(x.strip())[lang] for x in open(ref, 'r', encoding='utf-8').readlines()]
+    hypothesis = [x.strip() for x in open(hyp, 'r', encoding='utf-8').readlines()]
 
-lang = args.lang
-if lang == 'js':
-    lang = 'javascript'
-alpha, beta, gamma, theta = [float(x) for x in args.params.split(',')]
+    assert len(hypothesis) == len(references)
 
-# preprocess inputs
-if args.txt_ref:
-    references = [[x.strip()] for x in open(args.ref, 'r', encoding='utf-8').readlines()]
-else:
-    references = [json.loads(x.strip())[lang] for x in open(args.ref, 'r', encoding='utf-8').readlines()]
-hypothesis = [x.strip() for x in open(args.hyp, 'r', encoding='utf-8').readlines()]
+    # calculate ngram match (BLEU)
+    tokenized_hyps = [language_specific_processing(x.split(), lang) for x in hypothesis]
+    tokenized_refs = [[language_specific_processing(x.split(), lang) for x in reference] for reference in references]
 
-assert len(hypothesis) == len(references)
+    ngram_match_score = bleu.corpus_bleu(tokenized_refs, tokenized_hyps)
 
-# calculate ngram match (BLEU)
-tokenized_hyps = [language_specific_processing(x.split(), lang) for x in hypothesis]
-tokenized_refs = [[language_specific_processing(x.split(), lang) for x in reference] for reference in references]
+    # calculate weighted ngram match
+    if keyword_dir is None:
+        keyword_dir = 'keywords'
 
-ngram_match_score = bleu.corpus_bleu(tokenized_refs, tokenized_hyps)
+    kw_file = os.path.join(keyword_dir, '{}.txt'.format(lang))
+    keywords = [x.strip() for x in open(kw_file, 'r', encoding='utf-8').readlines()]
 
-# calculate weighted ngram match
-keywords = [x.strip() for x in open('keywords/' + lang + '.txt', 'r', encoding='utf-8').readlines()]
+    def make_weights(reference_tokens, key_word_list):
+        return {token: 1 if token in key_word_list else 0.2 for token in reference_tokens}
+
+    tokenized_refs_with_weights = [
+        [
+            [reference_tokens, make_weights(reference_tokens, keywords)] for reference_tokens in reference
+        ] for reference in tokenized_refs
+    ]
+
+    weighted_ngram_match_score = weighted_ngram_match.corpus_bleu(tokenized_refs_with_weights, tokenized_hyps)
+
+    # calculate syntax match
+    syntax_match_score = syntax_match.corpus_syntax_match(references, hypothesis, lang)
+
+    # calculate dataflow match
+    dataflow_match_score = dataflow_match.corpus_dataflow_match(references, hypothesis, lang)
+
+    print(
+        'Ngram match:\t%.2f\nWeighted ngram:\t%.2f\nSyntax match:\t%.2f\nDataflow match:\t%.2f' %
+        (ngram_match_score * 100, weighted_ngram_match_score * 100,
+         syntax_match_score * 100, dataflow_match_score * 100)
+    )
+
+    code_bleu_score = alpha * ngram_match_score \
+                      + beta * weighted_ngram_match_score \
+                      + gamma * syntax_match_score \
+                      + theta * dataflow_match_score
+
+    return code_bleu_score
 
 
-def make_weights(reference_tokens, key_word_list):
-    return {token: 1 if token in key_word_list else 0.2 \
-            for token in reference_tokens}
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--ref', type=str, required=True, help='reference file')
+    parser.add_argument('--hyp', type=str, required=True, help='hypothesis file')
+    parser.add_argument('--txt_ref', action='store_true', help='reference file is a txt file')
+    parser.add_argument('--lang', type=str, required=True,
+                        choices=['java', 'js', 'c_sharp', 'php', 'go', 'python', 'ruby'],
+                        help='programming language')
+    parser.add_argument('--params', type=str, default='0.25,0.25,0.25,0.25', help='alpha, beta and gamma')
 
+    args = parser.parse_args()
 
-tokenized_refs_with_weights = [[[reference_tokens, make_weights(reference_tokens, keywords)] \
-                                for reference_tokens in reference] for reference in tokenized_refs]
-
-weighted_ngram_match_score = weighted_ngram_match.corpus_bleu(tokenized_refs_with_weights, tokenized_hyps)
-
-# calculate syntax match
-syntax_match_score = syntax_match.corpus_syntax_match(references, hypothesis, lang)
-
-# calculate dataflow match
-dataflow_match_score = dataflow_match.corpus_dataflow_match(references, hypothesis, lang)
-
-# print('ngram match: {0}, weighted ngram match: {1}, syntax_match: {2}, dataflow_match: {3}'. \
-#      format(ngram_match_score, weighted_ngram_match_score, syntax_match_score, dataflow_match_score))
-print('Ngram match:\t%.2f\nWeighted ngram:\t%.2f\nSyntax match:\t%.2f\nDataflow match:\t%.2f' % ( \
-    ngram_match_score * 100, weighted_ngram_match_score * 100, syntax_match_score * 100, dataflow_match_score * 100))
-
-code_bleu_score = alpha * ngram_match_score \
-                  + beta * weighted_ngram_match_score \
-                  + gamma * syntax_match_score \
-                  + theta * dataflow_match_score
-
-print('CodeBLEU score: %.2f' % (code_bleu_score * 100.0))
+    code_bleu_score = get_codebleu(args.ref, args.hyp, args.lang, args.params, args.txt_ref)
+    print('CodeBLEU score: %.2f' % (code_bleu_score * 100.0))
