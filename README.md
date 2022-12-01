@@ -54,7 +54,7 @@ python build.py
 
 ## Dataset
 
-The dataset details is provided [here](https://github.com/wasiahmad/Pri_AVATAR/blob/main/data/README.md). You can download the data by following:
+The dataset details is provided [here](https://github.com/wasiahmad/AVATAR/blob/main/data/README.md#dataset). You can download the data by following:
 
 ```
 cd data
@@ -96,7 +96,7 @@ bash rnn.sh GPU_ID SOURCE_LANG TARGET_LANG
 bash transformer.sh GPU_ID SOURCE_LANG TARGET_LANG
 
 # CodeBERT, GraphCoderBERT, CodeT5, PLBART
-cd codebert|graphcodebert|codet5|plbart
+cd [codebert|graphcodebert|codet5|plbart]
 bash run.sh GPU_ID SOURCE_LANG TARGET_LANG
 
 # CodeGPT, CodeGPT-adapted
@@ -114,10 +114,9 @@ bash zero_shot.sh GPU_ID SOURCE_LANG TARGET_LANG [transcoder|transcoder-dobf|tra
 
 ## Benchmarks
 
-- We evaluate program and function translation accuracy in terms of BLEU, Syntax Match (SM), Dataflow Match (DM), CodeBLEU (CB), Exact Match (EM).
-- We also perform execution based evaluation of program and function translation.
+- We perform n-gram and execution based evaluation of program and function translation.
 - We report the model performances in this [spreadsheet](https://docs.google.com/spreadsheets/d/12aFLXDrR3nTXCI_GmG8qqoMKmdSsWkxECKTleQkq5ZU/edit#gid=0).
-- For function translation error analysis, we categorize the errors into Compilation and Runtime errors. Check details 
+- For function translation error analysis, we categorize the errors, see details 
 [here](https://github.com/wasiahmad/AVATAR/blob/main/evaluation/classify_errors.py).
 
 ## License
