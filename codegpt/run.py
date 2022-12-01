@@ -324,10 +324,6 @@ def evaluate(args, model, tokenizer, prefix="", eval_when_training=False):
     eval_sampler = SequentialSampler(eval_dataset)
     eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
 
-    # multi-gpu evaluate
-    if args.n_gpu > 1 and eval_when_training is False:
-        model = torch.nn.DataParallel(model)
-
     eval_loss = 0.0
     nb_eval_steps = 0
     model.eval()
@@ -379,43 +375,18 @@ def eval_bleu(args, model, tokenizer, file_type='test', max_example=999999999):
     model.zero_grad()
     model.eval()
 
-    preds = []
-    for step, (batch, token_labels) in enumerate(test_dataloader):
-        inputs = batch.to(args.device)
+    pred_ids = []
+    for batch in tqdm(test_dataloader, total=len(test_dataloader), desc="Eval bleu"):
+        source_ids = batch[0].to(args.device)
         with torch.no_grad():
-            beam_size = args.beam_size
-            m = torch.nn.LogSoftmax(dim=-1)
-            outputs = model(inputs)[1]
-            p = []
-            zero = torch.cuda.LongTensor(1).fill_(0)
-            for i in range(inputs.shape[0]):
-                past_hidden = [x[:, i:i + 1].expand(-1, beam_size, -1, -1, -1) for x in outputs]
-                beam = Beam(beam_size, tokenizer.bos_token_id, tokenizer.eos_token_id)
-                for _ in range(162):
-                    if beam.done():
-                        break
-                    input_ids = beam.getCurrentState()
-                    transformer_outputs = model(input_ids, past=past_hidden)
-                    out = m(transformer_outputs[0][:, -1, :]).data
-                    beam.advance(out)
-                    past_hidden = [x.data.index_select(1, beam.getCurrentOrigin()) for x in transformer_outputs[1]]
-                hyp = beam.getHyp(beam.getFinal())
-                pred = beam.buildTargetTokens(hyp)[:beam_size]
+            preds = model.generate(source_ids,
+                                   use_cache=True,
+                                   num_beams=args.beam_size,
+                                   max_length=args.block_size)
+            top_preds = list(preds[:, source_ids.size(1):].cpu().numpy())
+            pred_ids.extend(top_preds)
 
-                pred = [torch.cat([x.view(-1) for x in p] + [zero] * (162 - len(p))).view(1, -1) for p in pred]
-                p.append(torch.cat(pred, 0).unsqueeze(0))
-            p = torch.cat(p, 0)
-            for pred in p:
-                t = pred[0].cpu().numpy()
-                t = list(t)
-                if 0 in t:
-                    t = t[:t.index(0)]
-                text = tokenizer.decode(t, clean_up_tokenization_spaces=False)
-                # print(text)
-                preds.append(text)
-
-        if step % args.logging_steps == 0:
-            logger.info(f"{step} are done!")
+    preds = [tokenizer.decode(id, skip_special_tokens=True, clean_up_tokenization_spaces=False) for id in pred_ids]
 
     golds = []
     datas = read_data(args.data_dir, args.source, args.target, file_type)
@@ -571,7 +542,7 @@ def main():
 
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
-        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() and not args.no_cuda else "cpu")
         args.n_gpu = torch.cuda.device_count()
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.cuda.set_device(args.local_rank)

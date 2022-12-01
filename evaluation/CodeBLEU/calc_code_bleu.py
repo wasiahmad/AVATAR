@@ -5,12 +5,15 @@
 import os
 import json
 import argparse
+from pathlib import Path
 from evaluation.CodeBLEU import (
     bleu,
     weighted_ngram_match,
     syntax_match,
     dataflow_match
 )
+
+root_directory = Path(__file__).parents[2]
 
 
 def python_process(tokens):
@@ -95,7 +98,7 @@ def get_codebleu(
 
     # calculate weighted ngram match
     if keyword_dir is None:
-        keyword_dir = 'keywords'
+        keyword_dir = root_directory.joinpath("evaluation/CodeBLEU/keywords")
 
     kw_file = os.path.join(keyword_dir, '{}.txt'.format(lang))
     keywords = [x.strip() for x in open(kw_file, 'r', encoding='utf-8').readlines()]

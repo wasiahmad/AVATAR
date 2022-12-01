@@ -1,13 +1,15 @@
 # Dataset
 
-- We share the dataset split we used in our experiments: `data.zip` and `g4g_functions.zip`.
-- `data.zip` contains the AVATAR dataset. The number of examples in the AVATAR dataset collected from each 
-data sources:
-    - CodeForces - 2247
-    - AtCoder - 715
-    - CodeJam - 129
-    - GeeksforGeeks - 5132
-    - LeetCode - 117
-    - ProjectEuler - 160
-- `g4g_functions.zip` is collection of parallel standalone functions extracted from the `GeeksforGeeks` subset of the 
-AVATAR dataset. It consists of 2,388 / 341 / 682 examples for training, validation, and testing.
+- We share the dataset split we used in our experiments: `data.zip` and `parallel_functions.zip`.
+    - Download them by running `bash download.sh`
+- `data.zip` contains the AVATAR dataset. Total number of examples in the AVATAR dataset is 9515. sources:
+    - CodeForces - 2193
+    - AtCoder - 871
+    - AIZU - 1043
+    - CodeJam - 120
+    - GeeksforGeeks - 5019
+    - LeetCode - 107
+    - ProjectEuler - 162
+- We extract a collection of parallel standalone functions (`parallel_functions.zip`) from AVATAR.
+    - It consists of 3391 examples for training.
+    - We use the validation and testing dataset collected from GeeksforGeeks released with TransCoder.

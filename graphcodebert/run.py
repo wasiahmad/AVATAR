@@ -76,6 +76,7 @@ dfg_function = {
 }
 
 logger = logging.getLogger(__name__)
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 COMPILED_SO_FILE = os.environ['COMPILED_SO_FILE']
 
@@ -397,8 +398,13 @@ def main():
     parser.add_argument('--data_dir', type=str, required=True)
     parser.add_argument('--source', type=str, required=True)
     parser.add_argument('--target', type=str, required=True)
+    parser.add_argument('--log_file', type=str, default=None)
+
     # print arguments
     args = parser.parse_args()
+    if args.log_file is not None:
+        fh = logging.FileHandler(args.log_file)
+        logger.addHandler(fh)
     logger.info(args)
 
     # Setup CUDA, GPU

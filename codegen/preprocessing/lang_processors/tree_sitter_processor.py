@@ -85,6 +85,22 @@ class TreeSitterLangProcessor(LangProcessor):
         self.dfs(code, tree.root_node, tokens, tokens_type)
         return tokens, tokens_type
 
+    def is_parse_valid(self, code):
+        def syntax_error(node):
+            if node.type == "ERROR":
+                return True
+
+            for child in node.children:
+                if syntax_error(child):
+                    return True
+
+            return False
+
+        tree = self.get_ast(code)
+        if tree is not None:
+            return not syntax_error(tree.root_node)
+        return False
+
     def get_ast(self, code):
         assert isinstance(code, str) or isinstance(code, bytes)
         if isinstance(code, str):
@@ -197,4 +213,3 @@ class TreeSitterLangProcessor(LangProcessor):
         if isinstance(code, str):
             code = code.split()
         return code[code.index("(") - 1]
-   

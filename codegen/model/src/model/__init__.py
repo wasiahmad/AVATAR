@@ -41,7 +41,7 @@ def check_model_params(params):
         params.mask_length_dist = None
     elif params.mask_length == "poisson":
         assert (
-            params.poisson_lambda is not None
+                params.poisson_lambda is not None
         ), "poisson_lambda is None, it should be set when using poisson mask_length"
         _lambda = params.poisson_lambda
 
@@ -117,10 +117,10 @@ def check_model_params(params):
             params.reload_classifier = params.reload_model
 
     assert not (
-        params.beam_size > 1 and params.number_samples > 1
+            params.beam_size > 1 and params.number_samples > 1
     ), "Cannot sample when already doing beam search"
     assert (params.eval_temperature is None) == (
-        params.number_samples <= 1
+            params.number_samples <= 1
     ), "Eval temperature should be set if and only if taking several samples at eval time"
 
 
@@ -257,7 +257,7 @@ def build_classifier(params):
         else:
             reloaded = reloaded["classifier"]
             if all([k.startswith("module.") for k in reloaded.keys()]):
-                reloaded = {k[len("module.") :]: v for k, v in reloaded.items()}
+                reloaded = {k[len("module."):]: v for k, v in reloaded.items()}
             classifier.load_state_dict(reloaded)
 
     logger.info("Classifier: {}".format(classifier))
@@ -294,9 +294,9 @@ def reload_transformer(params, path, dico, model, model_type):
                         "encoder_attn", "attentions"
                     )
                     if (
-                        getattr(params, "reload_encoder_attn_on_decoder", False)
-                        and "encoder_attn" in weight_name
-                        and encoder_attn_name in reloaded[model_type]
+                            getattr(params, "reload_encoder_attn_on_decoder", False)
+                            and "encoder_attn" in weight_name
+                            and encoder_attn_name in reloaded[model_type]
                     ):
                         logger.warning(f"Reloading {encoder_attn_name} instead")
                         reloaded[model_type][weight_name] = (
@@ -316,7 +316,7 @@ def clean_model_state_dict(reloaded, model_type):
 
     model_reloaded = reloaded[model_type if model_type in reloaded else "model"]
     if all([k.startswith("module.") for k in model_reloaded.keys()]):
-        model_reloaded = {k[len("module.") :]: v for k, v in model_reloaded.items()}
+        model_reloaded = {k[len("module."):]: v for k, v in model_reloaded.items()}
     reloaded[model_type] = model_reloaded
 
 
@@ -345,7 +345,7 @@ def reload_word_embeddings(reloaded, dico, model_type):
 
     reloaded[model_type]["embeddings.weight"] = torch.cat(
         [
-            reloaded[model_type]["embeddings.weight"][index : index + 1]
+            reloaded[model_type]["embeddings.weight"][index: index + 1]
             for index in matching_indices
         ],
         dim=0,
@@ -356,7 +356,7 @@ def reload_word_embeddings(reloaded, dico, model_type):
         embedding_size = reloaded[model_type]["pred_layer.proj.weight"].shape[1]
         reloaded[model_type]["pred_layer.proj.weight"] = torch.cat(
             [
-                reloaded[model_type]["pred_layer.proj.weight"][index : index + 1]
+                reloaded[model_type]["pred_layer.proj.weight"][index: index + 1]
                 if index is not None
                 else torch.normal(
                     torch.zeros_like(first_line),
@@ -410,7 +410,7 @@ def reload_lang_embeddings(reloaded, params, model_type):
             continue
         else:
             assert (
-                len(index) == 1
+                    len(index) == 1
             ), f"matching lang found: {index} in reloaded model for lang {lang} in {langs_reloaded.keys()}"
             logger.warning(
                 f"Lang {lang} matched to pretrained {langs_reloaded_id2lang[index[0]]} lang embedding."
@@ -421,7 +421,7 @@ def reload_lang_embeddings(reloaded, params, model_type):
     embedding_size = model_reloaded["lang_embeddings.weight"].shape[1]
     model_reloaded["lang_embeddings.weight"] = torch.cat(
         [
-            model_reloaded["lang_embeddings.weight"][index : index + 1]
+            model_reloaded["lang_embeddings.weight"][index: index + 1]
             if index is not None
             else torch.normal(
                 torch.zeros_like(first_line),
@@ -449,8 +449,8 @@ def reload_position_embeddings(reloaded, encoder, model_type):
             f"The size of position embeddings in current model is {current_size}, the size of reloaded is {reloaded_size}. need to truncate the reloaded position embeddings."
         )
         model_reloaded["position_embeddings.weight"] = model_reloaded[
-            "position_embeddings.weight"
-        ][:current_size, :]
+                                                           "position_embeddings.weight"
+                                                       ][:current_size, :]
     else:
         logger.warning(
             f"The size of position embeddings in current model is {current_size}, the size of reloaded is {reloaded_size}. need to repeat last positions {current_size - reloaded_size} times."

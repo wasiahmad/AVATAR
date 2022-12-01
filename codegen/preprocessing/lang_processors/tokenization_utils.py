@@ -5,10 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 #
 import re
-from sacrebleu import tokenize_v14_international
+from sacrebleu.tokenizers.tokenizer_intl import TokenizerV14International
 
 # IMPORTED
 NEWLINE_TOKEN = "NEWLINE_TOKEN"
+tokenizer = TokenizerV14International()
 
 
 # IMPORTED
@@ -51,14 +52,14 @@ def process_string(tok, char2tok, tok2char, is_comment, do_whole_processing=True
         )
         tok = (
             tok.replace(" ▁ ", " ")
-            .replace(" TABSYMBOL ", "\t")
-            .replace("\\r", "")
-            .replace(" STRNEWLINE ", "\\n")
+                .replace(" TABSYMBOL ", "\t")
+                .replace("\\r", "")
+                .replace(" STRNEWLINE ", "\\n")
         )
         return tok
 
     tok = re.sub(" +", " ", tok)
-    tok = tokenize_v14_international(tok)
+    tok = tokenizer(tok)
     tok = re.sub(" +", " ", tok)
     tok = tok.replace("\r", "")
     for special_token, char in tok2char.items():
@@ -90,8 +91,8 @@ def replace_tokens(tok, dictionary):
 def replace_general_string_tok(tok):
     return (
         tok.replace(" ", " ▁ ")
-        .replace("\n", " STRNEWLINE ")
-        .replace("\t", " TABSYMBOL ")
+            .replace("\n", " STRNEWLINE ")
+            .replace("\t", " TABSYMBOL ")
     )
 
 

@@ -20,7 +20,7 @@ import psutil
 
 import numpy as np
 import torch
-from transformers.tokenization_gpt2 import bytes_to_unicode
+from transformers.models.gpt2.tokenization_gpt2 import bytes_to_unicode
 
 from .data.dictionary import NUM_SPECIAL_TOKENS
 from .logger import create_logger

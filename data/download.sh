@@ -1,83 +1,126 @@
 #!/usr/bin/env bash
 
-export PYTHONIOENCODING=utf-8;
-DATA_DIR=`pwd`
-HOME_DIR=`realpath ..`;
+export PYTHONIOENCODING=utf-8
+DATA_DIR=$(pwd)
 
-#############################################
-#        Download GeeksforGeeks Data        #
-#############################################
-FILE=GeeksForGeeks.zip
-if [[ ! -f "$FILE" ]]; then
+function wget_gdrive() {
+    GDRIVE_FILE_ID=$1
+    DEST_PATH=$2
+    if [[ ! -f "$DEST_PATH" ]]; then
+        echo "Downloading AtCoder test cases from https://drive.google.com/file/d/${GDRIVE_FILE_ID}"
+        wget --save-cookies cookies.txt 'https://docs.google.com/uc?export=download&id='$GDRIVE_FILE_ID -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' >confirm.txt
+        wget --load-cookies cookies.txt -O $DEST_PATH 'https://docs.google.com/uc?export=download&id='$GDRIVE_FILE_ID'&confirm='$(<confirm.txt)
+        rm cookies.txt confirm.txt
+    fi
+}
+
+function download_to_run_prepare() {
+    #############################################
+    #        Download GeeksforGeeks Data        #
+    #############################################
     # https://drive.google.com/file/d/1EEY96YzFAVmyKVmPr2gEm10hXETsrIBU
     fileid="1EEY96YzFAVmyKVmPr2gEm10hXETsrIBU"
-    curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}" > /dev/null
-    curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${FILE}
-    rm ./cookie
-    unzip ${FILE}
-fi
+    filename=GeeksForGeeks.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
 
-#############################################
-#           Download AtCoder Data           #
-#############################################
-FILE=atcoder.zip
-if [[ ! -f "$FILE" ]]; then
+    #############################################
+    #           Download AtCoder Data           #
+    #############################################
     # https://drive.google.com/file/d/1pywwzH5RKDLlDjClK_eFsZJJuHwDb4eg
     fileid="1pywwzH5RKDLlDjClK_eFsZJJuHwDb4eg"
-    curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}" > /dev/null
-    curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${FILE}
-    rm ./cookie
-    unzip ${FILE}
-fi
+    filename=AtCoder.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
 
-#############################################
-#           Download CodeJam Data           #
-#############################################
-FILE=codejam.zip
-if [[ ! -f "$FILE" ]]; then
+    #############################################
+    #           Download CodeJam Data           #
+    #############################################
     # https://drive.google.com/file/d/1Qi33871gi_cvnGLmQ3zqQDRMke5B0Sf6
     fileid="1Qi33871gi_cvnGLmQ3zqQDRMke5B0Sf6"
-    curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}" > /dev/null
-    curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${FILE}
-    rm ./cookie
-    unzip ${FILE}
-fi
+    filename=CodeJam.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
 
-#############################################
-#          Download CodeForces Data         #
-#############################################
-FILE=CodeForces.zip
-if [[ ! -f "$FILE" ]]; then
+    #############################################
+    #          Download CodeForces Data         #
+    #############################################
     # https://drive.google.com/file/d/1tlU0lCeObkS43a9ZiyV0htOdj-DNKbdt
     fileid="1tlU0lCeObkS43a9ZiyV0htOdj-DNKbdt"
-    curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}" > /dev/null
-    curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${FILE}
-    rm ./cookie
-    unzip ${FILE}
-fi
+    filename=CodeForces.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
 
-#############################################
-#          Download ProjectEuler Data       #
-#############################################
-FILE=ProjectEuler.zip
-if [[ ! -f "$FILE" ]]; then
+    #############################################
+    #          Download ProjectEuler Data       #
+    #############################################
     # https://drive.google.com/file/d/1V5a6U_u-y7I5mRt0cJlINHBy3a6miiUY
     fileid="1V5a6U_u-y7I5mRt0cJlINHBy3a6miiUY"
-    curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}" > /dev/null
-    curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${FILE}
-    rm ./cookie
-    unzip ${FILE}
-fi
+    filename=ProjectEuler.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
 
-#############################################
-#           Download LeetCode Data          #
-#############################################
-FILE=LeetCode.zip
-if [[ ! -f "$FILE" ]]; then
+    #############################################
+    #           Download LeetCode Data          #
+    #############################################
     # https://drive.google.com/file/d/1dVzdhSLIRhFG1hGYqbOMO8gQ9Pb8Qilo
     fileid="1dVzdhSLIRhFG1hGYqbOMO8gQ9Pb8Qilo"
-    curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}" > /dev/null
-    curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${FILE}
-    rm ./cookie
-    unzip ${FILE}
-fi
+    filename=LeetCode.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
+
+}
+
+function dl_transcoder_data() {
+    #############################################
+    #       Download TransCoder Test Data       #
+    #############################################
+    # https://drive.google.com/file/d/1b84rqC2-26MMyRJfH3rCvGhEkHn-NupR
+    fileid="1b84rqC2-26MMyRJfH3rCvGhEkHn-NupR"
+    filename=transcoder_test_gfg.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
+
+    # https://drive.google.com/file/d/1rRUzndsvU6hyH5eNnm4Vx_95TNt5jURk
+    fileid="1rRUzndsvU6hyH5eNnm4Vx_95TNt5jURk"
+    filename=transcoder_evaluation_gfg.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
+}
+
+function download() {
+    # download the data used in the paper
+    # https://drive.google.com/file/d/1ch8BCPmMfHFq8D7NRxmU0ps-Ymv80h4a
+    fileid="1ch8BCPmMfHFq8D7NRxmU0ps-Ymv80h4a"
+    filename=data.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
+    # https://drive.google.com/file/d/1ql9nkGnfpOn27p8M_JtpgCpezbbjIOUD
+    fileid="1ql9nkGnfpOn27p8M_JtpgCpezbbjIOUD"
+    filename=parallel_functions.zip
+    if [[ ! -f "$filename" ]]; then
+        wget_gdrive $fileid $DATA_DIR/$filename
+        unzip $DATA_DIR/$filename -d $DATA_DIR
+    fi
+}
+
+download
+dl_transcoder_data

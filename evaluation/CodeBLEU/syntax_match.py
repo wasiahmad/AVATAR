@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. 
 # Licensed under the MIT license.
 
+from pathlib import Path
 from evaluation.CodeBLEU.parser import (
     DFG_python,
     DFG_java,
@@ -28,13 +29,16 @@ dfg_function = {
     'c_sharp': DFG_csharp,
 }
 
+root_directory = Path(__file__).parents[2]
+PARSER_LOCATION = root_directory.joinpath("evaluation/CodeBLEU/parser/my-languages.so")
+
 
 def calc_syntax_match(references, candidate, lang):
     return corpus_syntax_match([references], [candidate], lang)
 
 
 def corpus_syntax_match(references, candidates, lang):
-    JAVA_LANGUAGE = Language('parser/my-languages.so', lang)
+    JAVA_LANGUAGE = Language(PARSER_LOCATION, lang)
     parser = Parser()
     parser.set_language(JAVA_LANGUAGE)
     match_count = 0

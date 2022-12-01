@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import ast
+import javalang
 import argparse
 
 sys.path.append(".")
@@ -15,6 +17,27 @@ from codegen.preprocessing.lang_processors.python_processor import PythonProcess
 root_folder = "../third_party"
 jprocessor = JavaProcessor(root_folder=root_folder)
 pyprocessor = PythonProcessor(root_folder=root_folder)
+
+
+def is_parsable(programString, lang):
+    if lang == 'java':
+        try:
+            javalang.parse.parse(programString)
+        except javalang.parser.JavaSyntaxError as syntax_error:
+            return False
+        except javalang.tokenizer.LexerError as lexer_error:
+            return False
+        return True
+    elif lang == 'python':
+        try:
+            ast.parse(programString, filename='NA')
+        except SyntaxError:
+            return False
+        except Exception:
+            return False
+        return True
+    else:
+        raise NotImplementedError
 
 
 class Solution:
@@ -116,12 +139,18 @@ def main(args):
 
                 try:
                     if ext == 'java':
-                        with open(solution_path, 'r', encoding='utf8') as f:
-                            code = f.read()
+                        with open(solution_path, 'rb') as f:
+                            code = f.read().decode("utf-8", errors="replace")
+                            if not is_parsable(code, 'java'):
+                                continue
+
                             code_tokens = jprocessor.tokenize_code(code)
-                            fn_standalone, fn_class = jprocessor.extract_functions(code_tokens)
-                            functions_standalone = [(jprocessor.get_function_name(fn), fn) for fn in fn_standalone]
-                            functions_class = [(jprocessor.get_function_name(fn), fn) for fn in fn_class]
+                            try:
+                                fn_standalone, fn_class = jprocessor.extract_functions(code_tokens)
+                                functions_standalone = [(jprocessor.get_function_name(fn), fn) for fn in fn_standalone]
+                                functions_class = [(jprocessor.get_function_name(fn), fn) for fn in fn_class]
+                            except:
+                                functions_standalone, functions_class = [], []
 
                             if len(code_tokens) > args.java_max_len:
                                 continue
@@ -139,12 +168,18 @@ def main(args):
                                 )
                             )
                     elif ext == 'py':
-                        with open(solution_path, 'r', encoding='utf8') as f:
-                            code = f.read()
+                        with open(solution_path, 'rb') as f:
+                            code = f.read().decode("utf-8", errors="replace")
+                            if not is_parsable(code, 'python'):
+                                continue
+
                             code_tokens = pyprocessor.tokenize_code(code)
-                            fn_standalone, fn_class = pyprocessor.extract_functions(code_tokens)
-                            functions_standalone = [(pyprocessor.get_function_name(fn), fn) for fn in fn_standalone]
-                            functions_class = [(pyprocessor.get_function_name(fn), fn) for fn in fn_class]
+                            try:
+                                fn_standalone, fn_class = pyprocessor.extract_functions(code_tokens)
+                                functions_standalone = [(pyprocessor.get_function_name(fn), fn) for fn in fn_standalone]
+                                functions_class = [(pyprocessor.get_function_name(fn), fn) for fn in fn_class]
+                            except:
+                                functions_standalone, functions_class = [], []
 
                             if len(code_tokens) > args.python_max_len:
                                 continue
@@ -161,8 +196,8 @@ def main(args):
                                     submission_id
                                 )
                             )
-                except BaseException as error:
-                    print(contest_dir + '_' + problem_dir)
+                except Exception as error:
+                    print(solution_path, error)
                     pass
                 if len(java_solutions) >= 20 and len(python_solutions) >= 20:
                     break

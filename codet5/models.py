@@ -69,8 +69,7 @@ def get_model_size(model):
 def build_or_load_gen_model(args):
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
     config = config_class.from_pretrained(args.config_name if args.config_name else args.model_name_or_path)
-    if args.model_type != 'codet5':
-        tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name)
+    tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name)
     if args.model_type == 'roberta':
         encoder = model_class.from_pretrained(args.model_name_or_path, config=config)
         decoder_layer = nn.TransformerDecoderLayer(d_model=config.hidden_size, nhead=config.num_attention_heads)
@@ -81,11 +80,6 @@ def build_or_load_gen_model(args):
     else:
         model = model_class.from_pretrained(args.model_name_or_path)
 
-    if args.model_type == 'codet5':
-        # reset special ids: pad_token_id = 0, bos_token_id = 1, eos_token_id = 2
-        config, model, tokenizer = load_codet5(config, model, tokenizer_class,
-                                               add_lang_ids=args.add_lang_ids,
-                                               tokenizer_path=args.tokenizer_path)
     logger.info("Finish loading model [%s] from %s", get_model_size(model), args.model_name_or_path)
 
     if args.load_model_path is not None:
@@ -258,7 +252,7 @@ class Beam(object):
         self.prevKs = []
         # The outputs at each time-step.
         self.nextYs = [self.tt.LongTensor(size)
-                           .fill_(0)]
+                       .fill_(0)]
         self.nextYs[0][0] = sos
         # Has EOS topped the beam yet.
         self._eos = eos

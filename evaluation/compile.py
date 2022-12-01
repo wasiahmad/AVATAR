@@ -4,7 +4,6 @@ import sys
 sys.path.append("..")
 
 import argparse
-from tqdm import tqdm
 from codegen.preprocessing.lang_processors.java_processor import JavaProcessor
 from codegen.preprocessing.lang_processors.python_processor import PythonProcessor
 from subprocess import run, check_output, CalledProcessError, STDOUT, PIPE
@@ -21,7 +20,7 @@ def check_python(args):
             programs.append(line.strip())
 
     success, error, num_syntax_error, num_indent_error = 0, 0, 0, 0
-    for program in tqdm(programs, total=len(programs)):
+    for program in programs:
         # find public class name
         public_class_name = 'main'
         if "public class" in program:
@@ -29,7 +28,7 @@ def check_python(args):
 
         program = pyprocessor.detokenize_code(program)
         filename = '{}.py'.format(public_class_name)
-        with open(filename, 'w', encoding='utf8')as fw:
+        with open(filename, 'w', encoding='utf8') as fw:
             fw.write(program)
 
         command = ["python", "-m", "py_compile", filename]
@@ -59,7 +58,7 @@ def check_java(args):
             programs.append(line.strip())
 
     success, error, num_errors = 0, 0, 0
-    for program in tqdm(programs, total=len(programs)):
+    for program in programs:
         # find public class name
         public_class_name = 'main'
         if "public class" in program:
@@ -70,7 +69,7 @@ def check_java(args):
         program = jprocessor.detokenize_code(program)
         filename = '{}.java'.format(public_class_name)
         class_filename = '{}.class'.format(public_class_name)
-        with open(filename, 'w', encoding='utf8')as fw:
+        with open(filename, 'w', encoding='utf8') as fw:
             fw.write(program)
 
         command = ["javac", filename]
@@ -79,8 +78,12 @@ def check_java(args):
             success += 1
         except CalledProcessError as e:
             error += 1
-            error_count = e.output.decode().split()[-2]
-            num_errors += int(error_count)
+            err_message = e.output.decode()
+            try:
+                error_count = int(err_message.split()[-2])
+                num_errors += error_count
+            except Exception as e:
+                print(f"Error: {e} while parsing {err_message}")
 
         if os.path.isfile(filename):
             os.remove(filename)

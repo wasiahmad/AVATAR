@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. 
 # Licensed under the MIT license.
 
+from pathlib import Path
 from evaluation.CodeBLEU.parser import (
     DFG_python,
     DFG_java,
@@ -29,13 +30,16 @@ dfg_function = {
     'c_sharp': DFG_csharp,
 }
 
+root_directory = Path(__file__).parents[2]
+PARSER_LOCATION = root_directory.joinpath("evaluation/CodeBLEU/parser/my-languages.so")
+
 
 def calc_dataflow_match(references, candidate, lang):
     return corpus_dataflow_match([references], [candidate], lang)
 
 
 def corpus_dataflow_match(references, candidates, lang):
-    LANGUAGE = Language('parser/my-languages.so', lang)
+    LANGUAGE = Language(PARSER_LOCATION, lang)
     parser = Parser()
     parser.set_language(LANGUAGE)
     parser = [parser, dfg_function[lang]]

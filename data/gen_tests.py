@@ -64,12 +64,12 @@ def get_return_type(code):
     if isinstance(code, str):
         code = code.split()
     if "static" in code[0: code.index("(")]:
-        end_index = code[code.index("(") - 1]
-        start_index = code[code.index("static") + 1]
+        end_index = code.index("(") - 1
+        start_index = code.index("static") + 1
         return_type = ' '.join(code[start_index:end_index])
     elif "public" in code[0: code.index("(")]:
-        end_index = code[code.index("(") - 1]
-        start_index = code[code.index("public") + 1]
+        end_index = code.index("(") - 1
+        start_index = code.index("public") + 1
         return_type = ' '.join(code[start_index:end_index])
     else:
         end_index = code[code.index("(") - 1]
@@ -229,9 +229,11 @@ def main(params):
     with open(filename, 'r', encoding='utf8') as f:
         for line in f:
             ex = json.loads(line.strip())
-            assert len(ex["java"]) == 1 and len(ex["python"]) == 1
-            java_code = ex["java"][0]
-            python_code = ex["python"][0]
+            if not (len(ex["java"]) == 1 and len(ex["python"]) == 1):
+                continue
+
+            java_code = ex["java"][0]  # string
+            python_code = ex["python"][0]  # string
 
             fn_name = jprocessor.get_function_name(java_code)
             types, names = jprocessor.extract_arguments(java_code)

@@ -79,6 +79,8 @@ def eval_ppl_epoch(args, eval_data, eval_examples, model, tokenizer):
                 )
                 loss = outputs[0]
 
+        if args.n_gpu > 1:
+            loss = loss.mean()  # mean() to average on multi-gpu.
         eval_loss += loss.item()
         batch_num += 1
     eval_loss = eval_loss / batch_num
@@ -86,7 +88,7 @@ def eval_ppl_epoch(args, eval_data, eval_examples, model, tokenizer):
     return eval_ppl
 
 
-def eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, split_tag, criteria):
+def eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, split_tag):
     logger.info("  ***** Running bleu evaluation on {} data*****".format(split_tag))
     logger.info("  Num examples = %d", len(eval_examples))
     logger.info("  Batch size = %d", args.eval_batch_size)
@@ -188,7 +190,6 @@ def main():
     config, model, tokenizer = build_or_load_gen_model(args)
     model.to(args.device)
     if args.n_gpu > 1:
-        # for DataParallel
         model = torch.nn.DataParallel(model)
     pool = multiprocessing.Pool(args.cpu_cont)
     args.train_filename, args.dev_filename, args.test_filename = get_filenames(args.data_dir, args.task, args.sub_task)
@@ -340,7 +341,7 @@ def main():
                     eval_examples, eval_data = load_and_cache_gen_data(
                         args, args.dev_filename, pool, tokenizer, 'dev', only_src=True, is_sample=True
                     )
-                    result = eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, 'dev', 'e%d' % cur_epoch)
+                    result = eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, 'dev')
                     dev_bleu, dev_em = result['bleu'], result['em']
                     if args.task in ['summarize']:
                         dev_bleu_em = dev_bleu
@@ -387,27 +388,20 @@ def main():
     if args.do_test:
         logger.info("  " + "***** Testing *****")
         logger.info("  Batch size = %d", args.eval_batch_size)
-
-        for criteria in ['best-bleu', 'best-ppl']:  # 'best-bleu', 'best-ppl', 'last'
-            file = os.path.join(args.output_dir, 'checkpoint-{}/pytorch_model.bin'.format(criteria))
-            if os.path.isfile(file):
-                logger.info("Reload model from {}".format(file))
-                model.load_state_dict(torch.load(file))
-                eval_examples, eval_data = load_and_cache_gen_data(
-                    args, args.test_filename, pool, tokenizer, 'test', only_src=True, is_sample=False
-                )
-                result = eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, 'test', criteria)
-                test_bleu, test_em = result['bleu'], result['em']
-                test_codebleu = result['codebleu'] if 'codebleu' in result else 0
-                result_str = "[%s] bleu-4: %.2f, em: %.4f, codebleu: %.4f\n" % (
-                    criteria, test_bleu, test_em, test_codebleu
-                )
-                logger.info(result_str)
-                fa.write(result_str)
-                if args.res_fn:
-                    with open(args.res_fn, 'a+') as f:
-                        f.write('[Time: {}] {}\n'.format(get_elapse_time(t0), file))
-                        f.write(result_str)
+        eval_examples, eval_data = load_and_cache_gen_data(
+            args, args.test_filename, pool, tokenizer, 'test', only_src=True, is_sample=False
+        )
+        model = model.module if hasattr(model, 'module') else model
+        result = eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, 'test')
+        test_bleu, test_em = result['bleu'], result['em']
+        test_codebleu = result['codebleu'] if 'codebleu' in result else 0
+        result_str = "bleu-4: %.2f, em: %.4f, codebleu: %.4f\n" % (test_bleu, test_em, test_codebleu)
+        logger.info(result_str)
+        fa.write(result_str)
+        if args.res_fn:
+            with open(args.res_fn, 'a+') as f:
+                f.write('[Time: {}] {}\n'.format(get_elapse_time(t0), file))
+                f.write(result_str)
     logger.info("Finish and take {}".format(get_elapse_time(t0)))
     fa.write("Finish and take {}".format(get_elapse_time(t0)))
     fa.close()

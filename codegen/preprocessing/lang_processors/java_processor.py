@@ -6,6 +6,7 @@
 #
 from codegen.preprocessing.lang_processors.tree_sitter_processor import (
     TreeSitterLangProcessor,
+    NEW_LINE
 )
 from codegen.preprocessing.obfuscation.utils_deobfuscation import dico_to_string
 from codegen.preprocessing.obfuscation import javalang_obfuscator
@@ -83,7 +84,7 @@ class JavaProcessor(TreeSitterLangProcessor):
                         )
                 ):
                     # go previous until the start of function
-                    while token not in [";", "}", "{", "*/", "ENDCOM"]:
+                    while token not in [";", "}", "{", "*/", "ENDCOM", NEW_LINE, "\n"]:
                         i.prev()
                         token = tokens[i.i]
 

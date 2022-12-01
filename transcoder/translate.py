@@ -134,6 +134,7 @@ class Translator:
             beam_size=1,
             sample_temperature=None,
             device='cuda:0',
+            max_tokens=None,
             show_example=False,
     ):
         assert lang1 in {'python', 'java', 'cpp'}, lang1
@@ -151,6 +152,10 @@ class Translator:
         for input in batch_input:
             tokens = input.split()
             tokens = self.bpe_model.apply_bpe(" ".join(tokens)).split()
+            if max_tokens is not None and len(tokens) > max_tokens - 2:
+                tokens = tokens[:max_tokens - 2]
+                logger.info(f"[Warning] truncated long input sequence of size {len(tokens)}")
+
             tokens = ['</s>'] + tokens + ['</s>']
             input_ids.append([self.dico.index(w) for w in tokens])
             input_lengths.append(len(tokens))
@@ -226,7 +231,7 @@ class Translator:
                 if getattr(self.reloaded_params, "roberta_mode", False):
                     beam_outputs.append(restore_roberta_segmentation_sentence(" ".join(wid)))
                 else:
-                    beam_outputs.append(" ".join(wid).replace("@@ ", ""))
+                    beam_outputs.append(" ".join(wid).replace("@@ ", "").rstrip("@@"))
             batch_result.append(beam_outputs)
 
         return batch_result
@@ -266,6 +271,7 @@ if __name__ == '__main__':
                     lang1=params.src_lang,
                     lang2=params.tgt_lang,
                     beam_size=params.beam_size,
+                    max_tokens=1024,
                     show_example=params.show_example,
                 )
                 for single_out in output:

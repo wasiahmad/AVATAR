@@ -1,41 +1,60 @@
-# AVATAR
+<div align="center">
 
-- Official code of our work, [AVATAR: A Parallel Corpus for Java-Python Program Translation](https://arxiv.org/abs/2108.11590). 
-- AVATAR stands for *j**AVA**-py**T**hon progr**A**m t**R**anslation*. 
-- AVATAR is a corpus of **8,475** programming problems and their solutions written in Java and Python.
-- Supervised fine-tuning and evaluation in terms of **Computational Accuracy**, see details 
-[here](https://github.com/wasiahmad/AVATAR/tree/main/evaluation).
+<h1>AVATAR</h1>
 
-<!--
-<p align='justify'>
-Official code of our work, <a href="" target="_blank">AVATAR: A Parallel Corpus for Java-Python Program Translation</a>. AVATAR stands for <q>j<b>AVA</b>-py<b>T</b>hon progr<b>A</b>m t<b>R</b>anslation</q>. In this work, we present a corpus of <b>8,475</b> programming problems and their solutions written in two popular languages, Java and Python. We collect the dataset from competitive programming sites, online platforms, and open source repositories. We present several baselines, including models trained from scratch or pre-trained on large-scale source code collection and fine-tuned on our proposed dataset.
-<p align='justify'>
-!-->
+Official code release of our
+work, [AVATAR: A Parallel Corpus for Java-Python Program Translation](https://arxiv.org/abs/2108.11590).
 
-  
-## Table of Contents
+<p align="center">
+  <a href="#setup">Setup</a> •
+  <a href="#dataset">Dataset</a> •
+  <a href="#models">Models</a> •
+  <a href="#training--evaluation">Training & Evaluation</a> •
+  <a href="#benchmarks">Benchmarks</a> •
+  <a href="#license">License</a> • 
+  <a href="#citation">Citation</a>
+</p>
 
-- [AVATAR](#AVATAR)
-  - [Table of Contents](#table-of-contents)
-  - [Dataset](#dataset)
-  - [Models](#models)
-  - [Training & Evaluation](#training--evaluation)
-  - [Benchmarks](#benchmarks)
-  - [License](#license)
-  - [Citation](#citation)
+</div>
+
+## :mega: Notice related to a dataset bug (:bug:) fix :point_left:
+
+There was a major bug in the AVATAR dataset as raised in this [issue](https://github.com/wasiahmad/AVATAR/issues/5). We observed that while crawling data from different sources, in many examples, new lines were missing. In Python data, we also observed missing indentation. As a result, programs were not parse-able. We re-crawled data and ensured every program we store is parse-able. The :bug: has been fixed, so you can continue using the dataset seamlessly. 
+
+
+## What is AVATAR?
+
+- AVATAR stands for *j**AVA**-py**T**hon progr**A**m t**R**anslation*.
+- AVATAR is a corpus of **9,515** programming problems and their solutions written in Java and Python.
+- AVATAR offers a collection of **3,391** parallel standalone functions, see details [here](https://github.com/wasiahmad/AVATAR/tree/main/data).
+- AVATAR presents evaluation results of finetuned pre-trained LMs.
+- AVATAR performs execution based evaluation of program translation, see details [here](https://github.com/wasiahmad/AVATAR/tree/main/test_cases).
+
+## Setup
+
+```
+conda create --name avatar_env python==3.8
+conda activate avatar_env
+pip install -r requirements.txt
+
+mkdir -p third_party
+cd third_party
+git clone https://github.com/tree-sitter/tree-sitter-java.git
+git clone https://github.com/tree-sitter/tree-sitter-python.git
+
+# optional (for fp16 training)
+git clone https://github.com/NVIDIA/apex
+cd apex
+pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" .
+cd ..
+
+# building tree-sitter library
+python build.py
+```
 
 ## Dataset
 
-We have collected the programming problems and their solutions from competitive programming sites, online platforms, and open source repositories. We list the sources below.
-
-- CodeForces
-- AtCoder 
-- CodeJam 
-- GeeksforGeeks
-- LeetCode
-- ProjectEuler
-
-Data collected can be downloaded by following:
+The dataset details is provided [here](https://github.com/wasiahmad/Pri_AVATAR/blob/main/data/README.md). You can download the data by following:
 
 ```
 cd data
@@ -49,331 +68,63 @@ To prepare the data, we perform the following steps.
 - Filter data based on length threshold (~512).
 - Perform de-duplication. (remove examples that are duplicates)
 
-To perform the preparation, run:
+If you want to perform the preparation of your own, run:
 
 ```
 cd data
 bash prepare.sh
 ```
 
-
 ## Models
 
-We studied 8 models for program translation.
+We studied 11 models for program translation.
 
-#### Models trained from scratch
+**[Models trained from scratch]** 
+- Seq2Seq+Attn. [1Lx512H], [Transformer](https://papers.nips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) [6Lx512H]
 
-- Seq2Seq+Attn. [1Lx512H]
-- [Transformer](https://papers.nips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf) [6Lx512H]
-
-#### Pre-trained models
-
-- [CodeGPT](https://arxiv.org/abs/2102.04664)
-- [CodeGPT-adapted](https://arxiv.org/abs/2102.04664)
-- [CodeBERT](https://www.aclweb.org/anthology/2020.findings-emnlp.139/)
-- [GraphCoderBERT](https://openreview.net/pdf?id=jLoC4ez43PZ)
-- [PLBART](https://arxiv.org/abs/2103.06333)
-- [CodeT5](https://arxiv.org/abs/2109.00859)
-- [TransCoder](https://papers.nips.cc/paper/2020/hash/ed23fbf18c2cd35f8c7f8de44f85c08d-Abstract.html) (unsupervised approach)
-- [TC-DOBF](https://arxiv.org/abs/2102.07492) (unsupervised approach)
-
+**[Pre-trained models]** 
+- [CodeGPT](https://arxiv.org/abs/2102.04664), [CodeGPT-adapted](https://arxiv.org/abs/2102.04664), [CodeBERT](https://www.aclweb.org/anthology/2020.findings-emnlp.139/), [GraphCoderBERT](https://openreview.net/pdf?id=jLoC4ez43PZ), [PLBART](https://arxiv.org/abs/2103.06333), [CodeT5](https://arxiv.org/abs/2109.00859), [TransCoder](https://papers.nips.cc/paper/2020/hash/ed23fbf18c2cd35f8c7f8de44f85c08d-Abstract.html), [TransCoder-DOBF](https://arxiv.org/abs/2102.07492), [TransCoder-ST](https://arxiv.org/pdf/2110.06773.pdf)
 
 ## Training & Evaluation
 
 To train and evaluate a model, go to the corresponding model directory and execute the **run.sh** script.
 
 ```
-# Seq2Seq+Attn.
+# Seq2Seq+Attn, Transformer
 cd seq2seq
-bash rnn.sh GPU_ID LANG1 LANG2
+bash rnn.sh GPU_ID SOURCE_LANG TARGET_LANG
+bash transformer.sh GPU_ID SOURCE_LANG TARGET_LANG
 
-# Transformer
-cd seq2seq
-bash transformer.sh GPU_ID LANG1 LANG2
+# CodeBERT, GraphCoderBERT, CodeT5, PLBART
+cd codebert|graphcodebert|codet5|plbart
+bash run.sh GPU_ID SOURCE_LANG TARGET_LANG
 
-# CodeGPT
+# CodeGPT, CodeGPT-adapted
 cd codegpt
-bash run.sh GPU_ID LANG1 LANG2 CodeGPT
+bash run.sh GPU_ID SOURCE_LANG TARGET_LANG [CodeGPT|adaptedCodeGPT]
 
-# CodeGPT-adapted
-cd codegpt
-bash run.sh GPU_ID LANG1 LANG2
-
-# CodeBERT
-cd codebert
-bash run.sh GPU_ID LANG1 LANG2
-
-# GraphCoderBERT
-cd graphcodebert
-bash run.sh GPU_ID LANG1 LANG2
-
-# PLBART
-cd plbart
-# fine-tuning either for Java->Python or Python-Java
-bash run.sh GPU_ID LANG1 LANG2
-# multilingual fine-tuning
-bash multilingual.sh GPU_ID
-
-# Naive Copy
-cd naivecopy
-bash run.sh
+# Transcoder, Transcoder-DOBF, Transcoder-ST 
+cd transcoder
+bash zero_shot.sh GPU_ID SOURCE_LANG TARGET_LANG [transcoder|transcoder-dobf|transcoder-st]
 ```
 
-- Here, `LANG1 LANG2=Java Python` or `LANG1 LANG2=Python Java`.
-- Download pre-trained PLBART, GraphCodeBERT, and Transcoder model files by running 
-[download.sh](https://github.com/wasiahmad/AVATAR/blob/main/download.sh) script.
-- We trained the models on GeForce RTX 2080 ti GPUs (11019MiB).
- 
+- Here, `SOURCE_LANG=[java|python]` or `TARGET_LANG=[java|python]`.
+- Download pre-trained PLBART and Transcoder model checkpoints by running
+  [download.sh](https://github.com/wasiahmad/AVATAR/blob/main/download.sh) script.
 
 ## Benchmarks
-  
-We evaluate the models' performances on the test set in terms of Compilation Accuracy (CA), BLEU, Syntax Match (SM), Dataflow Match (DM), CodeBLEU (CB), Exact Match (EM). We report the model performances below.
-  
-<table>
-    <thead>
-        <tr>
-            <th rowspan=2 align ="left">Training</th>
-            <th rowspan=2 align ="left">Models</th>
-            <th colspan=6>Java to Python</th>
-            <th colspan=6>Python to Java</th>
-        </tr>
-        <tr>
-            <th>CA</th>
-            <th>BLEU</th>
-            <th>SM</th>
-            <th>DM</th>
-            <th>CB</th>
-            <th>EM</th>
-            <th>CA</th>
-            <th>BLEU</th>
-            <th>SM</th>
-            <th>DM</th>
-            <th>CB</th>
-            <th>EM</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td rowspan=3>None</td>
-          <td>Naive Copy</td>
-          <td align ="center">-</td>
-          <td align ="center">23.4</td>
-          <td align ="center">-</td>
-          <td align ="center">-</td>
-          <td align ="center">-</td>
-          <td align ="center">0.0</td>
-          <td align ="center">-</td>
-          <td align ="center">26.9</td>
-          <td align ="center">-</td>
-          <td align ="center">-</td>
-          <td align ="center">-</td>
-          <td align ="center">0.0</td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2006.03511.pdf" target="_blank">TransCoder</a></td>
-          <td align ="center">76.9</td>
-          <td align ="center">36.8</td>
-          <td align ="center">31.0</td>
-          <td align ="center">17.1</td>
-          <td align ="center">29.1</td>
-          <td align ="center">0.1</td>
-          <td align ="center">0.0</td>
-          <td align ="center">49.4</td>
-          <td align ="center">37.6</td>
-          <td align ="center">18.5</td>
-          <td align ="center">31.9</td>
-          <td align ="center">0.0</td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF</a></td>
-          <td align ="center"><b>77.7</b></td>
-          <td align ="center">43.4</td>
-          <td align ="center">29.7</td>
-          <td align ="center">33.9</td>
-          <td align ="center">34.8</td>
-          <td align ="center">0.0</td>
-          <td align ="center">0.0</td>
-          <td align ="center">46.1</td>
-          <td align ="center">36.0</td>
-          <td align ="center">12.6</td>
-          <td align ="center">28.8</td>
-          <td align ="center">0.0</td>
-      </tr>
-      <tr>
-          <td rowspan=2>From Scratch</td>
-          <td>Seq2Seq+Attn.</td>
-          <td align ="center">66.5</td>
-          <td align ="center">56.3</td>
-          <td align ="center">39.1</td>
-          <td align ="center">18.4</td>
-          <td align ="center">37.9</td>
-          <td align ="center">1.0</td>
-          <td align ="center">28.2</td>
-          <td align ="center">62.7</td>
-          <td align ="center">46.6</td>
-          <td align ="center">28.5</td>
-          <td align ="center">43.0</td>
-          <td align ="center">0.8</td>
-      </tr>
-      <tr>
-          <td>Transformer</td>
-          <td align ="center">61.5</td>
-          <td align ="center">38.9</td>
-          <td align ="center">34.2</td>
-          <td align ="center">16.5</td>
-          <td align ="center">29.1</td>
-          <td align ="center">0.0</td>
-          <td align ="center">32.6</td>
-          <td align ="center">45.6</td>
-          <td align ="center">45.7</td>
-          <td align ="center">26.4</td>
-          <td align ="center">37.4</td>
-          <td align ="center">0.1</td>
-      </tr>
-      <tr>
-          <td rowspan=9>Pre-trained</td>
-          <td><a href="https://arxiv.org/pdf/2102.04664.pdf" target="_blank">CodeGPT</a></td>
-          <td align ="center">47.3</td>
-          <td align ="center">38.2</td>
-          <td align ="center">32.5</td>
-          <td align ="center">11.5</td>
-          <td align ="center">26.1</td>
-          <td align ="center">1.1</td>
-          <td align ="center">28.8</td>
-          <td align ="center">44.0</td>
-          <td align ="center">38.8</td>
-          <td align ="center">26.7</td>
-          <td align ="center">33.8</td>
-          <td align ="center">0.1</td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2102.04664.pdf" target="_blank">CodeGPT-adapted</a></td>
-          <td align ="center">48.1</td>
-          <td align ="center">38.2</td>
-          <td align ="center">32.5</td>
-          <td align ="center">12.1</td>
-          <td align ="center">26.2</td>
-          <td align ="center">1.2</td>
-          <td align ="center">31.4</td>
-          <td align ="center">42.4</td>
-          <td align ="center">37.2</td>
-          <td align ="center">27.2</td>
-          <td align ="center">33.1</td>
-          <td align ="center">0.5</td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2002.08155.pdf" target="_blank">CodeBERT</a></td>
-          <td align ="center">62.3</td>
-          <td align ="center">59.3</td>
-          <td align ="center">37.7</td>
-          <td align ="center">16.2</td>
-          <td align ="center">36.7</td>
-          <td align ="center">0.5</td>
-          <td align ="center">25.3</td>
-          <td align ="center">55.3</td>
-          <td align ="center">38.4</td>
-          <td align ="center">22.5</td>
-          <td align ="center">36.1</td>
-          <td align ="center">0.6</td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2009.08366.pdf" target="_blank">GraphCodeBERT</a></td>
-          <td align ="center">65.7</td>
-          <td align ="center">59.7</td>
-          <td align ="center">38.9</td>
-          <td align ="center">16.4</td>
-          <td align ="center">37.1</td>
-          <td align ="center">0.7</td>
-          <td align ="center">42.8</td>
-          <td align ="center">60.6</td>
-          <td align ="center">48.4</td>
-          <td align ="center">20.6</td>
-          <td align ="center">40.1</td>
-          <td align ="center">0.4</td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2109.00859.pdf" target="_blank">CodeT5-base</a></td>
-          <td align ="center">71.5</td>
-          <td align ="center">67.0</td>
-          <td align ="center">42.1</td>
-          <td align ="center"><b>34.6</b></td>
-          <td align ="center"><b>46.7</b></td>
-          <td align ="center"><b>2.8</b></td>
-          <td align ="center">51.4</td>
-          <td align ="center">67.0</td>
-          <td align ="center">56.1</td>
-          <td align ="center">26.6</td>
-          <td align ="center">49.6</td>
-          <td align ="center"><b>1.5</b></td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>mono</sub></a></td>
-          <td align ="center">76.4</td>
-          <td align ="center"><b>67.1</b></td>
-          <td align ="center"><b>42.6</b></td>
-          <td align ="center">19.3</td>
-          <td align ="center">43.3</td>
-          <td align ="center">2.4</td>
-          <td align ="center">65.6</td>
-          <td align ="center">69.1</td>
-          <td align ="center"><b>57.1</b></td>
-          <td align ="center">34.0</td>
-          <td align ="center">51.4</td>
-          <td align ="center">1.2</td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2103.06333.pdf" target="_blank">PLBART<sub>multi</sub></a></td>
-          <td align ="center">70.4</td>
-          <td align ="center"><b>67.1</b></td>
-          <td align ="center">42.0</td>
-          <td align ="center">17.6</td>
-          <td align ="center">42.4</td>
-          <td align ="center"><b>2.4</b></td>
-          <td align ="center"><b>69.2</b></td>
-          <td align ="center">69.4</td>
-          <td align ="center">56.6</td>
-          <td align ="center"><b>34.5</b></td>
-          <td align ="center"><b>51.8</b></td>
-          <td align ="center">1.0</td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF-ft<sub>mono</sub></a></td>
-          <td align ="center">73.5</td>
-          <td align ="center">56.8</td>
-          <td align ="center">39.8</td>
-          <td align ="center">34.3</td>
-          <td align ="center">43.7</td>
-          <td align ="center">2.1</td>
-          <td align ="center">62.4</td>
-          <td align ="center"><b>72.1</b></td>
-          <td align ="center">52.0</td>
-          <td align ="center">21.8</td>
-          <td align ="center">46.9</td>
-          <td align ="center"><b>1.5</b></td>
-      </tr>
-      <tr>
-          <td><a href="https://arxiv.org/pdf/2102.07492.pdf" target="_blank">TC-DOBF-ft<sub>multi</sub></a></td>
-          <td align ="center">67.9</td>
-          <td align ="center">45.5</td>
-          <td align ="center">36.5</td>
-          <td align ="center">32.9</td>
-          <td align ="center">38.6</td>
-          <td align ="center">1.0</td>
-          <td align ="center">54.9</td>
-          <td align ="center">65.0</td>
-          <td align ="center">53.4</td>
-          <td align ="center">21.3</td>
-          <td align ="center">46.0</td>
-          <td align ="center">0.9</td>
-      </tr>
-    </tbody>
-</table>  
 
+- We evaluate program and function translation accuracy in terms of BLEU, Syntax Match (SM), Dataflow Match (DM), CodeBLEU (CB), Exact Match (EM).
+- We also perform execution based evaluation of program and function translation.
+- We report the model performances in this [spreadsheet](https://docs.google.com/spreadsheets/d/12aFLXDrR3nTXCI_GmG8qqoMKmdSsWkxECKTleQkq5ZU/edit#gid=0).
+- For function translation error analysis, we categorize the errors into Compilation and Runtime errors. Check details 
+[here](https://github.com/wasiahmad/AVATAR/blob/main/evaluation/classify_errors.py).
 
 ## License
 
-This dataset is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) license, see the LICENSE file for details.
-
+This dataset is licensed under
+a [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) license,
+see the LICENSE file for details.
 
 ## Citation
 
