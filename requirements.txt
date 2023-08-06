@@ -1,3 +1,5 @@
+accelerate
+tfrecord
 six
 numpy
 slimit
@@ -9,11 +11,11 @@ dpu-utils
 astunparse
 stringcase
 scikit-learn
-torch==1.10
-transformers==4.11.3
-fairseq==0.10.2
+torch
+transformers
+fairseq
 tree_sitter
 tensorboard
 sentencepiece
 tensorboardX
-sacrebleu==1.5.1
+sacrebleu
