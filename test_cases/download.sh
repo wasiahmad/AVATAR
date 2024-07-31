@@ -37,7 +37,7 @@ fi
 
 # Download AtCoder test cases
 filename=atcoder_test_cases.tar.gz # 11.58 GB filesize
-fileid="1cg4EChbh2_hf-kMKX5g5qmz1HcWa-zSg"
+fileid="1AInTHzaZqym7WsT1B7yc8nZy7dA3ovPf"
 wget_gdrive $fileid $DATA_DIR/$filename
 AtCoder_TEST_DIR=$DATA_DIR/atcoder_test_cases
 if [[ ! -d "$AtCoder_TEST_DIR" ]]; then
